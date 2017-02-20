@@ -1,0 +1,55 @@
+# CREATED: 2/20/17 18:50 by Justin Salamon <justin.salamon@nyu.edu>
+
+from keras import backend as K
+from keras.engine.topology import Layer
+import numpy as np
+
+
+class SoftMaxPool(Layer):
+    '''
+    Keras softmax pooling layer
+    '''
+
+    def __init__(self, axis=-1, **kwargs):
+        super(SoftMaxPool, self).__init__(**kwargs)
+
+        self.axis = axis
+
+    def get_output_shape_for(self, input_shape):
+        shape = list(input_shape)
+        shape[self.axis] = 1
+        return tuple(shape)
+
+    def call(self, x, mask=None):
+        m = K.max(x, axis=self.axis, keepdims=True)
+        sm = K.exp(x - m)
+        w = sm / K.sum(sm, axis=self.axis, keepdims=True)
+        return K.sum(x * w, axis=self.axis, keepdims=True)
+
+    def get_config(self):
+        config = {'axis': self.axis}
+        base_config = super(SoftMaxPool, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+
+class SqueezeLayer(Layer):
+    '''
+    Keras squeeze layer
+    '''
+    def __init__(self, axis=-1, **kwargs):
+        super(SqueezeLayer, self).__init__(**kwargs)
+        self.axis = axis
+
+    def get_output_shape_for(self, input_shape):
+        shape = np.array(input_shape)
+        shape = shape[shape != 1]
+        return tuple(shape)
+
+    def call(self, x, mask=None):
+        return K.squeeze(x, axis=self.axis)
+
+    def get_config(self):
+        config = {'axis': self.axis}
+        base_config = super(SqueezeLayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
