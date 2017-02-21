@@ -221,7 +221,7 @@ def get_vad_data_frames(
 
     for batch in validate_generator:
         X_val.extend(batch[0])
-        Y_val.extend(batch[1])
+        Y_val.append(batch[1])
 
     X_val = np.asarray(X_val)
     Y_val = np.asarray(Y_val)
