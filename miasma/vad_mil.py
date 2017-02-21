@@ -287,14 +287,14 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             #     samples_per_epoch=samples_per_epoch, nb_epochs=nb_epochs,
             #     verbose=verbose, nb_val_samples=32)
 
-            # Test
-            X_test = []
-            Y_test = []
-            for batch in test_generator:
-                X_test.extend(batch[0])
-                Y_test.extend(batch[1])
-            X_test = np.asarray(X_test)
-            Y_test = np.asarray(Y_test)
+            # # Test
+            # X_test = []
+            # Y_test = []
+            # for batch in test_generator:
+            #     X_test.extend(batch[0])
+            #     Y_test.extend(batch[1])
+            # X_test = np.asarray(X_test)
+            # Y_test = np.asarray(Y_test)
 
             pred = model.predict(X_test)
             pred = pred.reshape((-1))
