@@ -8,7 +8,8 @@ from miasma.miasma.data_generators import get_vad_data
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
-from keras.layers import Convolution2D, MaxPooling2D, Convolution1D
+from keras.layers import Convolution2D, Convolution1D
+from keras.layers import MaxPooling1D, AveragePooling1D
 from keras.layers.normalization import BatchNormalization
 from keras.callbacks import ModelCheckpoint
 import pickle
@@ -21,10 +22,10 @@ import gzip
 np.random.seed(1337)  # for reproducibility
 
 
-def build_smp_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
-                    kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
-                    loss='binary_crossentropy', optimizer='adam',
-                    metrics=['accuracy']):
+def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
+                kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
+                loss='binary_crossentropy', optimizer='adam',
+                metrics=['accuracy'], pool_layer='softmax'):
 
     fullheight_kernel_size = (tf_rows, 1)
     if K.image_dim_ordering() == 'th':
@@ -57,7 +58,18 @@ def build_smp_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                        name='c4')(s4)
 
     s5 = SqueezeLayer(axis=-1, name='s5')(c4)
-    predictions = SoftMaxPool(name='smp')(s5)
+
+    if pool_layer == 'softmax':
+        predictions = SoftMaxPool(name='pool')(s5)
+    elif pool_layer == 'max':
+        predictions = MaxPooling1D(pool_length=tf_cols, stride=None,
+                                   border_mode='valid', name='pool')(s5)
+    elif pool_layer == 'mean':
+        predictions = AveragePooling1D(pool_length=tf_cols, stride=None,
+                                       border_mode='valid', name='pool')(s5)
+    else:
+        print('Unrecognized pooling, using softmax')
+        predictions = SoftMaxPool(name='pool')(s5)
 
     model = Model(input=inputs, output=predictions)
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
@@ -95,106 +107,111 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
     splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
-    split_indices = [2, 3, 4, 5, 6]
+    # split_indices = [2, 3, 4, 5, 6]
+    split_indices = [2]
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
     if not os.path.isdir(model_folder):
         os.mkdir(model_folder)
 
-    # --- SMP MODEL ---
-    smp_folder = os.path.join(model_folder, 'smp')
-    if not os.path.isdir(smp_folder):
-        os.mkdir(smp_folder)
+    for pool_layer in ['max', 'mean', 'softmax']:
 
-    # Save experiment metadata
-    metadata_file = os.path.join(smp_folder, '_metadata.json')
-    metadata = {
-        'root_folder': root_folder,
-        'model_base_folder': model_base_folder,
-        'splitfile': splitfile,
-        'split_indices': split_indices,
-        'model_folder': model_folder,
-        'smp_folder': smp_folder,
-        'expid': expid,
-        'n_bag_frames': n_bag_frames,
-        'min_active_frames': min_active_frames,
-        'act_threshold': act_threshold,
-        'n_hop_frames': n_hop_frames,
-        'batch_size': batch_size,
-        'n_samples': n_samples,
-        'n_active': n_active,
-        'samples_per_epoch': samples_per_epoch,
-        'nb_epochs': nb_epochs,
-        'verbose': verbose,
-        'tf_rows': tf_rows,
-        'tf_cols': tf_cols,
-        'nb_filters': nb_filters,
-        'kernel_sizes': kernel_sizes,
-        'nb_fullheight_filters': nb_fullheight_filters,
-        'loss': loss,
-        'optimizer': optimizer,
-        'metrics': metrics,
-        'theano_version': theano.__version__,
-        'keras_version:': keras.__version__,
-        'numpy_version': np.__version__,
-        'pescador_version': pescador.__version__}
+        smp_folder = os.path.join(model_folder, pool_layer)
+        if not os.path.isdir(smp_folder):
+            os.mkdir(smp_folder)
 
-    print(metadata)
-    json.dump(metadata, open(metadata_file, 'w'), indent=2)
+        # Save experiment metadata
+        metadata_file = os.path.join(smp_folder, '_metadata.json')
+        metadata = {
+            'root_folder': root_folder,
+            'model_base_folder': model_base_folder,
+            'splitfile': splitfile,
+            'split_indices': split_indices,
+            'model_folder': model_folder,
+            'smp_folder': smp_folder,
+            'expid': expid,
+            'n_bag_frames': n_bag_frames,
+            'min_active_frames': min_active_frames,
+            'act_threshold': act_threshold,
+            'n_hop_frames': n_hop_frames,
+            'batch_size': batch_size,
+            'n_samples': n_samples,
+            'n_active': n_active,
+            'samples_per_epoch': samples_per_epoch,
+            'nb_epochs': nb_epochs,
+            'verbose': verbose,
+            'tf_rows': tf_rows,
+            'tf_cols': tf_cols,
+            'nb_filters': nb_filters,
+            'kernel_sizes': kernel_sizes,
+            'nb_fullheight_filters': nb_fullheight_filters,
+            'loss': loss,
+            'optimizer': optimizer,
+            'metrics': metrics,
+            'pool_layer': pool_layer,
+            'theano_version': theano.__version__,
+            'keras_version:': keras.__version__,
+            'numpy_version': np.__version__,
+            'pescador_version': pescador.__version__}
 
-    # Repeat for 5 train/validate/test splits
-    for split_idx in split_indices:
+        # print(metadata)
+        json.dump(metadata, open(metadata_file, 'w'), indent=2)
 
-        # Build model
-        model = build_smp_model(
-            tf_rows=tf_rows, tf_cols=tf_cols, nb_filters=nb_filters,
-            kernel_sizes=kernel_sizes,
-            nb_fullheight_filters=nb_fullheight_filters, loss=loss,
-            optimizer=optimizer, metrics=metrics)
+        # Repeat for 5 train/validate/test splits
+        for split_idx in split_indices:
 
-        # Load data
-        train_generator, X_val, Y_val, X_test, Y_test = (
-            get_vad_data(
-                splitfile=splitfile,
-                split_index=split_idx,
-                root_folder=root_folder,
-                augmentations=['original'],
-                feature='cqt44100_1024_8_36',
-                activation='vocal_activation44100_1024',
-                n_bag_frames=n_bag_frames,
-                min_active_frames=min_active_frames,
-                act_threshold=act_threshold,
-                n_hop_frames=n_hop_frames,
-                batch_size=batch_size,
-                n_samples=n_samples,
-                n_active=n_active))
+            print('Split {:d}:'.format(split_idx))
 
-        checkpoint_file = os.path.join(
-            smp_folder, 'weights{:d}.hdf5'.format(split_idx))
+            # Build model
+            model = build_model(
+                tf_rows=tf_rows, tf_cols=tf_cols, nb_filters=nb_filters,
+                kernel_sizes=kernel_sizes,
+                nb_fullheight_filters=nb_fullheight_filters, loss=loss,
+                optimizer=optimizer, metrics=metrics, pool_layer='softmax')
 
-        # Train
-        history = fit_model(model, checkpoint_file, train_generator, X_val,
-                            Y_val, samples_per_epoch=samples_per_epoch,
-                            nb_epochs=nb_epochs, verbose=verbose)
+            # Load data
+            train_generator, X_val, Y_val, X_test, Y_test = (
+                get_vad_data(
+                    splitfile=splitfile,
+                    split_index=split_idx,
+                    root_folder=root_folder,
+                    augmentations=['original'],
+                    feature='cqt44100_1024_8_36',
+                    activation='vocal_activation44100_1024',
+                    n_bag_frames=n_bag_frames,
+                    min_active_frames=min_active_frames,
+                    act_threshold=act_threshold,
+                    n_hop_frames=n_hop_frames,
+                    batch_size=batch_size,
+                    n_samples=n_samples,
+                    n_active=n_active))
 
-        # Test
-        pred = model.predict(X_test)
-        pred = pred.reshape((-1))
-        acc = accuracy_score(Y_test, 1 * (pred >= 0.5))
-        print('Test accuracy: {:.3f}'.format(acc))
+            checkpoint_file = os.path.join(
+                smp_folder, 'weights{:d}.hdf5'.format(split_idx))
 
-        # Save Y_test and predictions
-        ytestfile = os.path.join(
-            smp_folder, 'ytest{:d}.npy.gz'.format(split_idx))
-        yprobfile = os.path.join(
-            smp_folder, 'yprob{:d}.npy.gz'.format(split_idx))
+            # Train
+            history = fit_model(model, checkpoint_file, train_generator, X_val,
+                                Y_val, samples_per_epoch=samples_per_epoch,
+                                nb_epochs=nb_epochs, verbose=verbose)
 
-        Y_test.dump(gzip.open(ytestfile, 'wb'))
-        pred.dump(gzip.open(yprobfile, 'wb'))
+            # Test
+            pred = model.predict(X_test)
+            pred = pred.reshape((-1))
+            acc = accuracy_score(Y_test, 1 * (pred >= 0.5))
+            print('Test accuracy: {:.3f}'.format(acc))
 
-        # Save history
-        history_file = os.path.join(
-            smp_folder, 'history{:d}.pkl'.format(split_idx))
-        pickle.dump(history, open(history_file, 'wb'))
+            # Save Y_test and predictions
+            ytestfile = os.path.join(
+                smp_folder, 'ytest{:d}.npy.gz'.format(split_idx))
+            yprobfile = os.path.join(
+                smp_folder, 'yprob{:d}.npy.gz'.format(split_idx))
+
+            Y_test.dump(gzip.open(ytestfile, 'wb'))
+            pred.dump(gzip.open(yprobfile, 'wb'))
+
+            # Save history
+            history_file = os.path.join(
+                smp_folder, 'history{:d}.pkl'.format(split_idx))
+            pickle.dump(history, open(history_file, 'wb'))
 
