@@ -23,10 +23,12 @@ import sys
 np.random.seed(1337)  # for reproducibility
 sys.setrecursionlimit(50000) # to pickle keras history objects
 
+
 def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                 kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                 loss='binary_crossentropy', optimizer='adam',
-                metrics=['accuracy'], pool_layer='softmax'):
+                metrics=['accuracy'], pool_layer='softmax',
+                print_model_summary=True):
 
     fullheight_kernel_size = (tf_rows, 1)
     if K.image_dim_ordering() == 'th':
@@ -77,7 +79,8 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     model = Model(input=inputs, output=predictions)
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
-    model.summary()
+    if print_model_summary:
+        model.summary()
 
     return model
 
@@ -110,8 +113,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
     splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
-    split_indices = [2, 3, 4, 5, 6]
-    # split_indices = [2]
+    # split_indices = [2, 3, 4, 5, 6]
+    split_indices = [2]
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
@@ -120,7 +123,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
 
     for pool_layer in ['max', 'mean', 'softmax']:
 
-        print('------------- MODEL: {:s}-pooling -------------'.format(pool_layer))
+        print('------------- MODEL: {:s}-pooling -------------'.format(
+            pool_layer))
 
         smp_folder = os.path.join(model_folder, pool_layer)
         if not os.path.isdir(smp_folder):
@@ -164,16 +168,22 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         json.dump(metadata, open(metadata_file, 'w'), indent=2)
 
         # Repeat for 5 train/validate/test splits
-        for split_idx in split_indices:
+        for split_n, split_idx in enumerate(split_indices):
 
-            print('Split {:d}:'.format(split_idx))
+            print('\n---------- Split {:d} ----------'.format(split_idx))
+
+            if split_n==0:
+                print_model_summary = True
+            else:
+                print_model_summary = False
 
             # Build model
             model = build_model(
                 tf_rows=tf_rows, tf_cols=tf_cols, nb_filters=nb_filters,
                 kernel_sizes=kernel_sizes,
                 nb_fullheight_filters=nb_fullheight_filters, loss=loss,
-                optimizer=optimizer, metrics=metrics, pool_layer=pool_layer)
+                optimizer=optimizer, metrics=metrics, pool_layer=pool_layer,
+                print_model_summary=print_model_summary)
 
             # Load data
             train_generator, X_val, Y_val, X_test, Y_test = (
