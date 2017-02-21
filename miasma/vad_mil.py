@@ -4,7 +4,7 @@ import numpy as np
 import os
 import json
 from miasma.miasma.layers import SoftMaxPool, SqueezeLayer
-from miasma.data_generators import get_vad_data
+from miasma.miasma.data_generators import get_vad_data
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
