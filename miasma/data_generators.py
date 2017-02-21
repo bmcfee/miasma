@@ -339,6 +339,7 @@ def keras_vad_minibatch_generator(root_folder, track_list,
 
 def get_vad_data_generators(
         splitfile='../data/dataSplits_7_1_2.pkl',
+        split_index=2,
         root_folder='/scratch/js7561/datasets/MedleyDB_output/',
         augmentations=['original'],
         feature='cqt44100_1024_8_36',
@@ -355,7 +356,7 @@ def get_vad_data_generators(
     split = np.load(splitfile)
 
     # TRAIN GENERATOR
-    track_list = split[2][0]
+    track_list = split[split_index][0]
     shuffle = True
     with_replacement = True
 
@@ -365,7 +366,7 @@ def get_vad_data_generators(
         shuffle, batch_size, n_samples, n_active, with_replacement)
 
     # VALIDATE GENERATOR
-    track_list = split[2][1]
+    track_list = split[split_index][1]
     shuffle = False
     with_replacement = False
     val_batch_size = 1024
@@ -376,7 +377,7 @@ def get_vad_data_generators(
         shuffle, val_batch_size, n_samples, n_active, with_replacement)
 
     # TEST GENERATOR
-    track_list = split[2][2]
+    track_list = split[split_index][2]
     shuffle = False
     with_replacement = False
     test_batch_size = 1024
@@ -391,6 +392,7 @@ def get_vad_data_generators(
 
 def get_vad_data(
         splitfile='../data/dataSplits_7_1_2.pkl',
+        split_index=2,
         root_folder='/scratch/js7561/datasets/MedleyDB_output/',
         augmentations=['original'],
         feature='cqt44100_1024_8_36',
@@ -406,6 +408,7 @@ def get_vad_data(
     train_generator, validate_generator, test_generator = (
         get_vad_data_generators(
             splitfile=splitfile,
+            split_index=split_index,
             root_folder=root_folder,
             augmentations=augmentations,
             feature=feature,
