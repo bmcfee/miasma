@@ -3,7 +3,7 @@
 import numpy as np
 import os
 import json
-from miasma.miasma.layers import SoftMaxPool, SqueezeLayer
+from miasma.miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
 from miasma.miasma.data_generators import get_vad_data
 from keras import backend as K
 from keras.models import Model
@@ -62,15 +62,17 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
 
     if pool_layer == 'softmax':
         s5 = SqueezeLayer(axis=-1, name='s5')(c4)
-        predictions = SoftMaxPool(name='pool')(s5)
+        predictions = SoftMaxPool(name='softmax-pool')(s5)
     elif pool_layer == 'max':
         p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
-                          border_mode='valid', name='pool')(c4)
+                          border_mode='valid', name='max-pool')(c4)
         predictions = SqueezeLayer(axis=-1, name='s5')(p5)
     elif pool_layer == 'mean':
         p5 = AveragePooling1D(pool_length=tf_cols, stride=None,
-                              border_mode='valid', name='pool')(c4)
+                              border_mode='valid', name='mean-pool')(c4)
         predictions = SqueezeLayer(axis=-1, name='s5')(p5)
+    elif pool_layer == 'none':
+        predictions = BagToBatchLayer(name='none-pool')(c4)
     else:
         print('Unrecognized pooling, using softmax')
         s5 = SqueezeLayer(axis=-1, name='s5')(c4)
