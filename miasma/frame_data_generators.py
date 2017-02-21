@@ -221,16 +221,17 @@ def get_vad_data_frames(
 
     for batch in validate_generator:
         X_val.extend(batch[0])
-        Y_val.append(batch[1])
+        Y_val.extend(batch[1])
 
     X_val = np.asarray(X_val)
     Y_val = np.asarray(Y_val)
+    Y_val = Y_val.reshape(-1, n_bag_frames)
 
     print('Validation set:')
     print(X_val.shape)
     print(Y_val.shape)
-    print('0: {:d}'.format(np.sum(Y_val == 0)))
-    print('1: {:d}'.format(np.sum(Y_val == 1)))
+    print('0: {:d}'.format(np.sum(Y_val.reshape(-1) == 0)))
+    print('1: {:d}'.format(np.sum(Y_val.reshape(-1) == 1)))
     print(' ')
 
     X_test = []
