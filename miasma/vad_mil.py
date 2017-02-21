@@ -285,7 +285,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             history = fit_model_valgenerator(
                 model, checkpoint_file, train_generator, validate_generator,
                 samples_per_epoch=samples_per_epoch, nb_epochs=nb_epochs,
-                verbose=verbose, nb_val_samples=4000)
+                verbose=verbose, nb_val_samples=10)
 
             # Test
             X_test = []
