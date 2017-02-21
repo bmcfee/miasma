@@ -41,9 +41,12 @@ class SqueezeLayer(Layer):
         self.axis = axis
 
     def get_output_shape_for(self, input_shape):
-        shape = np.array(input_shape)
-        shape = shape[shape != 1]
-        return tuple(shape)
+        # shape = np.array(input_shape)
+        # shape = shape[shape != 1]
+        # return tuple(shape)
+        shape = input_shape[:]
+        del shape[self.axis]
+        return shape
 
     def call(self, x, mask=None):
         return K.squeeze(x, axis=self.axis)
