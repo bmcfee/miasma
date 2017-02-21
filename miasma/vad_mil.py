@@ -141,7 +141,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         'pescador_version': pescador.__version__}
 
     print(metadata)
-    json.dump(open(metadata_file, 'w'), metadata, indent=2)
+    json.dump(metadata, open(metadata_file, 'w'), indent=2)
 
     # Repeat for 5 train/validate/test splits
     for split_idx in split_indices:
