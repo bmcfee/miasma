@@ -211,7 +211,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 smp_folder, 'model{:d}.json'.format(split_idx))
             model_json = model.to_json()
             with open(modeljsonfile, 'w') as json_file:
-                json_file.write(model_json, indent=2)
+                json.dump(model_json, json_file, indent=2)
 
             # Save last version of weights (for resuming training)
             weights_last_file = os.path.join(
