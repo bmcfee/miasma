@@ -206,17 +206,17 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             acc = accuracy_score(Y_test, 1 * (pred >= 0.5))
             print('Test accuracy: {:.3f}'.format(acc))
 
-	    # Save model
-	    modeljsonfile = os.path.join(
-	        smp_folder, 'model{:d}.json'.format(split_idx))
-	    model_json = model.to_json()
- 	    with open(modeljsonfile, 'w') as json_file:
-    		json_file.write(model_json, indent=2)
+            # Save model
+            modeljsonfile = os.path.join(
+                smp_folder, 'model{:d}.json'.format(split_idx))
+            model_json = model.to_json()
+            with open(modeljsonfile, 'w') as json_file:
+                json_file.write(model_json, indent=2)
 
-	    # Save last version of weights (for resuming training)
+            # Save last version of weights (for resuming training)
             weights_last_file = os.path.join(
-	    	smp_folder, 'weights_last{:d}.hdf5'.format(split_idx))
-	    model.save_weights(weights_last_file)
+                smp_folder, 'weights_last{:d}.hdf5'.format(split_idx))
+            model.save_weights(weights_last_file)
 
             # Save Y_test and predictions
             ytestfile = os.path.join(
