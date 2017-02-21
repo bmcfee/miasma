@@ -61,11 +61,13 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
         s5 = SqueezeLayer(axis=-1, name='s5')(c4)
         predictions = SoftMaxPool(name='pool')(s5)
     elif pool_layer == 'max':
-        predictions = MaxPooling1D(pool_length=tf_cols, stride=None,
-                                   border_mode='valid', name='pool')(c4)
+        p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
+                          border_mode='valid', name='pool')(c4)
+        predictions = SqueezeLayer(axis=-1, name='s5')(p5)
     elif pool_layer == 'mean':
-        predictions = AveragePooling1D(pool_length=tf_cols, stride=None,
-                                       border_mode='valid', name='pool')(c4)
+        p5 = AveragePooling1D(pool_length=tf_cols, stride=None,
+                              border_mode='valid', name='pool')(c4)
+        predictions = SqueezeLayer(axis=-1, name='s5')(p5)
     else:
         print('Unrecognized pooling, using softmax')
         s5 = SqueezeLayer(axis=-1, name='s5')(c4)
