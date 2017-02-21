@@ -133,3 +133,122 @@ def keras_vad_minibatch_generator_frames(
     for batch in keras_generator.generate():
         yield (batch['X'], batch['Y'].reshape(-1))
 
+
+def get_vad_data_generators_frames(
+        splitfile='../data/dataSplits_7_1_2.pkl',
+        split_index=2,
+        root_folder='/scratch/js7561/datasets/MedleyDB_output/',
+        augmentations=['original'],
+        feature='cqt44100_1024_8_36',
+        activation='vocal_activation44100_1024',
+        n_bag_frames=44,
+        act_threshold=0.5,
+        n_hop_frames=22,
+        batch_size=32,
+        n_samples=None,
+        n_active=1000):
+
+    # Load data split
+    split = np.load(splitfile)
+
+    # TRAIN GENERATOR
+    track_list = split[split_index][0]
+    shuffle = True
+    with_replacement = True
+
+    train_generator = keras_vad_minibatch_generator_frames(
+        root_folder, track_list, augmentations, feature, activation,
+        n_bag_frames, act_threshold, n_hop_frames,
+        shuffle, batch_size, n_samples, n_active, with_replacement)
+
+    # VALIDATE GENERATOR
+    track_list = split[split_index][1]
+    shuffle = False
+    with_replacement = False
+    val_batch_size = 1024
+
+    validate_generator = keras_vad_minibatch_generator_frames(
+        root_folder, track_list, augmentations, feature, activation,
+        n_bag_frames, act_threshold, n_hop_frames,
+        shuffle, val_batch_size, n_samples, n_active, with_replacement)
+
+    # TEST GENERATOR
+    track_list = split[split_index][2]
+    shuffle = False
+    with_replacement = False
+    test_batch_size = 1024
+
+    test_generator = keras_vad_minibatch_generator_frames(
+        root_folder, track_list, augmentations, feature, activation,
+        n_bag_frames, act_threshold, n_hop_frames,
+        shuffle, test_batch_size, n_samples, n_active, with_replacement)
+
+    return train_generator, validate_generator, test_generator
+
+
+def get_vad_data_frames(
+        splitfile='../data/dataSplits_7_1_2.pkl',
+        split_index=2,
+        root_folder='/scratch/js7561/datasets/MedleyDB_output/',
+        augmentations=['original'],
+        feature='cqt44100_1024_8_36',
+        activation='vocal_activation44100_1024',
+        n_bag_frames=44,
+        act_threshold=0.5,
+        n_hop_frames=22,
+        batch_size=32,
+        n_samples=None,
+        n_active=1000):
+
+    train_generator, validate_generator, test_generator = (
+        get_vad_data_generators_frames(
+            splitfile=splitfile,
+            split_index=split_index,
+            root_folder=root_folder,
+            augmentations=augmentations,
+            feature=feature,
+            activation=activation,
+            n_bag_frames=n_bag_frames,
+            act_threshold=act_threshold,
+            n_hop_frames=n_hop_frames,
+            batch_size=batch_size,
+            n_samples=n_samples,
+            n_active=n_active))
+
+    # Get full validation & test data
+    X_val = []
+    Y_val = []
+
+    for batch in validate_generator:
+        X_val.extend(batch[0])
+        Y_val.extend(batch[1])
+
+    X_val = np.asarray(X_val)
+    Y_val = np.asarray(Y_val)
+
+    print('Validation set:')
+    print(X_val.shape)
+    print(Y_val.shape)
+    print('0: {:d}'.format(np.sum(Y_val == 0)))
+    print('1: {:d}'.format(np.sum(Y_val == 1)))
+    print(' ')
+
+    X_test = []
+    Y_test = []
+
+    for batch in test_generator:
+        X_test.extend(batch[0])
+        Y_test.extend(batch[1])
+
+    X_test = np.asarray(X_test)
+    Y_test = np.asarray(Y_test)
+
+    print('Test set:')
+    print(X_test.shape)
+    print(Y_test.shape)
+    print('0: {:d}'.format(np.sum(Y_test == 0)))
+    print('1: {:d}'.format(np.sum(Y_test == 1)))
+    print(' ')
+
+    return train_generator, X_val, Y_val, X_test, Y_test
+

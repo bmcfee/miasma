@@ -5,6 +5,7 @@ import os
 import json
 from miasma.miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
 from miasma.miasma.data_generators import get_vad_data
+from miasma.miasma.frame_data_generators import get_vad_data_frames
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
@@ -191,21 +192,37 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 print_model_summary=print_model_summary)
 
             # Load data
-            train_generator, X_val, Y_val, X_test, Y_test = (
-                get_vad_data(
-                    splitfile=splitfile,
-                    split_index=split_idx,
-                    root_folder=root_folder,
-                    augmentations=['original'],
-                    feature='cqt44100_1024_8_36',
-                    activation='vocal_activation44100_1024',
-                    n_bag_frames=n_bag_frames,
-                    min_active_frames=min_active_frames,
-                    act_threshold=act_threshold,
-                    n_hop_frames=n_hop_frames,
-                    batch_size=batch_size,
-                    n_samples=n_samples,
-                    n_active=n_active))
+            if pool_layer == 'none':
+                train_generator, X_val, Y_val, X_test, Y_test = (
+                    get_vad_data_frames(
+                        splitfile=splitfile,
+                        split_index=split_idx,
+                        root_folder=root_folder,
+                        augmentations=['original'],
+                        feature='cqt44100_1024_8_36',
+                        activation='vocal_activation44100_1024',
+                        n_bag_frames=n_bag_frames,
+                        act_threshold=act_threshold,
+                        n_hop_frames=n_hop_frames,
+                        batch_size=batch_size,
+                        n_samples=n_samples,
+                        n_active=n_active))
+            else:
+                train_generator, X_val, Y_val, X_test, Y_test = (
+                    get_vad_data(
+                        splitfile=splitfile,
+                        split_index=split_idx,
+                        root_folder=root_folder,
+                        augmentations=['original'],
+                        feature='cqt44100_1024_8_36',
+                        activation='vocal_activation44100_1024',
+                        n_bag_frames=n_bag_frames,
+                        min_active_frames=min_active_frames,
+                        act_threshold=act_threshold,
+                        n_hop_frames=n_hop_frames,
+                        batch_size=batch_size,
+                        n_samples=n_samples,
+                        n_active=n_active))
 
             checkpoint_file = os.path.join(
                 smp_folder, 'weights_best{:d}.hdf5'.format(split_idx))
