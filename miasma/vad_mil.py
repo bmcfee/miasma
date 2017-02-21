@@ -31,11 +31,11 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     assert len(nb_filters) == len(kernel_sizes)
 
     b1 = BatchNormalization(name='b1')(inputs)
-    c1 = Convolution2D(nb_filters, kernel_sizes[0][0], kernel_sizes[0][1],
+    c1 = Convolution2D(nb_filters[0], kernel_sizes[0][0], kernel_sizes[0][1],
                        border_mode='same', activation='relu', name='c1')(b1)
 
     b2 = BatchNormalization(name='b2')(c1)
-    c2 = Convolution2D(nb_filters, kernel_sizes[1][0], kernel_sizes[1][1],
+    c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0], kernel_sizes[1][1],
                        border_mode='same', activation='relu', name='c2')(b2)
 
     b3 = BatchNormalization(name='b3')(c2)
