@@ -69,7 +69,7 @@ class BagToBatchLayer(Layer):
         shape = list(input_shape)
         del shape[1]
         if input_shape[0] is not None:
-            shape[0] *= input_shape[0]
+            shape[0] *= input_shape[1]
         return tuple(shape)
 
     def call(self, x, mask=None):
