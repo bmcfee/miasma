@@ -292,15 +292,13 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             Y_test = []
             for batch in test_generator:
                 X_test.extend(batch[0])
-                Y_test.extend(batch[0])
+                Y_test.extend(batch[1])
             X_test = np.asarray(X_test)
             Y_test = np.asarray(Y_test)
 
             pred = model.predict(X_test)
-            print(pred.shape)
             pred = pred.reshape((-1))
-            print(pred.shape)
-            print(pred)
+
             acc = accuracy_score(Y_test, 1 * (pred >= 0.5))
             print('Test accuracy: {:.3f}'.format(acc))
 
