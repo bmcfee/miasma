@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from miasma.layers import SoftMaxPool, SqueezeLayer
+from miasma.miasma.layers import SoftMaxPool, SqueezeLayer
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
