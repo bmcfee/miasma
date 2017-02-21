@@ -105,7 +105,7 @@ def fit_model(model, checkpoint_file, train_generator, X_val, Y_val,
 
 
 def fit_model_valgenerator(model, checkpoint_file, train_generator,
-                           validate_genrator, samples_per_epoch=1024,
+                           validate_generator, samples_per_epoch=1024,
                            nb_epochs=50, verbose=1, nb_val_samples=4000):
 
     checkpointer = ModelCheckpoint(filepath=checkpoint_file, verbose=0,
@@ -115,7 +115,7 @@ def fit_model_valgenerator(model, checkpoint_file, train_generator,
                                   samples_per_epoch,
                                   nb_epochs,
                                   verbose=verbose,
-                                  validation_data=validate_genrator,
+                                  validation_data=validate_generator,
                                   callbacks=[checkpointer],
                                   nb_val_samples=nb_val_samples)
 
@@ -285,7 +285,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             history = fit_model_valgenerator(
                 model, checkpoint_file, train_generator, validate_generator,
                 samples_per_epoch=samples_per_epoch, nb_epochs=nb_epochs,
-                verbose=verbose, nb_val_samples=10)
+                verbose=verbose, nb_val_samples=32)
 
             # Test
             X_test = []
