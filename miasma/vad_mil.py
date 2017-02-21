@@ -131,7 +131,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         'tf_cols': tf_cols,
         'nb_filters': nb_filters,
         'kernel_sizes': kernel_sizes,
-        'nb_fullheight_filters': 32,
+        'nb_fullheight_filters': nb_fullheight_filters,
         'loss': loss,
         'optimizer': optimizer,
         'metrics': metrics,
@@ -140,7 +140,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         'numpy_version': np.__version__,
         'pescador_version': pescador.__version__}
 
-    json.dump(open(metadata_file, 'wb'), metadata, indent=2)
+    print(metadata)
+    json.dump(open(metadata_file, 'w'), metadata, indent=2)
 
     # Repeat for 5 train/validate/test splits
     for split_idx in split_indices:
@@ -148,7 +149,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         # Build model
         model = build_smp_model(
             tf_rows=tf_rows, tf_cols=tf_cols, nb_filters=nb_filters,
-            kernel_sizes=kernel_sizes, nb_fullheight_filters=32, loss=loss,
+            kernel_sizes=kernel_sizes,
+            nb_fullheight_filters=nb_fullheight_filters, loss=loss,
             optimizer=optimizer, metrics=metrics)
 
         # Load data
