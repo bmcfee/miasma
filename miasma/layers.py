@@ -56,3 +56,26 @@ class SqueezeLayer(Layer):
         base_config = super(SqueezeLayer, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+
+class BagToBatchLayer(Layer):
+    '''
+    Convert bags with frame-level predictions to a batch where each sample in
+    the batch corresponds to a single frame.
+    '''
+    def __init__(self, **kwargs):
+        super(BagToBatchLayer, self).__init__(**kwargs)
+
+    def get_output_shape_for(self, input_shape):
+        shape = list(input_shape)
+        del shape[0]
+        shape[0] *= input_shape[0]
+        return tuple(shape)
+
+    def call(self, x, mask=None):
+        return K.reshape(x, self.get_output_shape_for(x.shape))
+
+    def get_config(self):
+        config = {'axis': self.axis}
+        base_config = super(BagToBatchLayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
