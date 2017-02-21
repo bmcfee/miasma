@@ -168,7 +168,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 tf_rows=tf_rows, tf_cols=tf_cols, nb_filters=nb_filters,
                 kernel_sizes=kernel_sizes,
                 nb_fullheight_filters=nb_fullheight_filters, loss=loss,
-                optimizer=optimizer, metrics=metrics, pool_layer='softmax')
+                optimizer=optimizer, metrics=metrics, pool_layer=pool_layer)
 
             # Load data
             train_generator, X_val, Y_val, X_test, Y_test = (
