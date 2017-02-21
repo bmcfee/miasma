@@ -293,6 +293,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             for batch in test_generator:
                 X_test.extend(batch[0])
                 Y_test.extend(batch[0])
+            X_test = np.asarray(X_test)
+            Y_test = np.asarray(Y_test)
 
             pred = model.predict(X_test)
             pred = pred.reshape((-1))
