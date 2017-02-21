@@ -106,7 +106,7 @@ def fit_model(model, checkpoint_file, train_generator, X_val, Y_val,
 
 def fit_model_valgenerator(model, checkpoint_file, train_generator,
                            validate_genrator, samples_per_epoch=1024,
-                           nb_epochs=50, verbose=1):
+                           nb_epochs=50, verbose=1, nb_val_samples=4000):
 
     checkpointer = ModelCheckpoint(filepath=checkpoint_file, verbose=0,
                                    save_best_only=True)
@@ -116,7 +116,8 @@ def fit_model_valgenerator(model, checkpoint_file, train_generator,
                                   nb_epochs,
                                   verbose=verbose,
                                   validation_data=validate_genrator,
-                                  callbacks=[checkpointer])
+                                  callbacks=[checkpointer],
+                                  nb_val_samples=nb_val_samples)
 
     return history
 
