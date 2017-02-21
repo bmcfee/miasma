@@ -13,8 +13,8 @@ from keras.callbacks import ModelCheckpoint
 np.random.seed(1337)  # for reproducibility
 
 
-def build_model(tf_rows=288, tf_cols=44, nb_filters=32,
-                nb_filters_fullheight=16, kernel_size=(3, 3),
+def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
+                kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                 loss='binary_crossentropy', optimizer='adam',
                 metrics=['accuracy']):
 
@@ -28,16 +28,18 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=32,
     # MODEL ARCHITECTURE #
     inputs = Input(shape=input_shape, name='input')
 
+    assert len(nb_filters) == len(kernel_sizes)
+
     b1 = BatchNormalization(name='b1')(inputs)
-    c1 = Convolution2D(nb_filters, kernel_size[0], kernel_size[1],
+    c1 = Convolution2D(nb_filters, kernel_sizes[0][0], kernel_sizes[0][1],
                        border_mode='same', activation='relu', name='c1')(b1)
 
     b2 = BatchNormalization(name='b2')(c1)
-    c2 = Convolution2D(nb_filters, kernel_size[0], kernel_size[1],
+    c2 = Convolution2D(nb_filters, kernel_sizes[1][0], kernel_sizes[1][1],
                        border_mode='same', activation='relu', name='c2')(b2)
 
     b3 = BatchNormalization(name='b3')(c2)
-    c3 = Convolution2D(nb_filters_fullheight, fullheight_kernel_size[0],
+    c3 = Convolution2D(nb_fullheight_filters, fullheight_kernel_size[0],
                        fullheight_kernel_size[1], border_mode='valid',
                        activation='relu', name='c3')(b3)
 
