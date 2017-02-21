@@ -108,22 +108,25 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                    kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                    loss='binary_crossentropy', optimizer='adam',
-                   metrics=['accuracy']):
+                   metrics=['accuracy', 'precision', 'recall'],
+                   split_indices=[2, 3, 4, 5, 6],
+                   pool_layers=['max', 'mean', 'softmax']):
 
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
     splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
     # split_indices = [2, 3, 4, 5, 6]
-    split_indices = [2]
+    # split_indices = [2]
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
     if not os.path.isdir(model_folder):
         os.mkdir(model_folder)
 
-    for pool_layer in ['max', 'mean', 'softmax']:
+    # for pool_layer in ['max', 'mean', 'softmax']:
+    for pool_layer in pool_layers:
 
-        print('------------- MODEL: {:s}-pooling -------------'.format(
+        print('\n------------- MODEL: {:s}-pooling -------------'.format(
             pool_layer))
 
         smp_folder = os.path.join(model_folder, pool_layer)
