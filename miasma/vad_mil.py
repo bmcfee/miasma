@@ -18,9 +18,10 @@ import keras
 import pescador
 from sklearn.metrics import accuracy_score
 import gzip
+import sys
 
 np.random.seed(1337)  # for reproducibility
-
+sys.setrecursionlimit(50000) # to pickle keras history objects
 
 def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                 kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
@@ -109,8 +110,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
     splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
-    # split_indices = [2, 3, 4, 5, 6]
-    split_indices = [2]
+    split_indices = [2, 3, 4, 5, 6]
+    # split_indices = [2]
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
@@ -118,6 +119,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         os.mkdir(model_folder)
 
     for pool_layer in ['max', 'mean', 'softmax']:
+
+        print('------------- MODEL: {:s}-pooling -------------'.format(pool_layer))
 
         smp_folder = os.path.join(model_folder, pool_layer)
         if not os.path.isdir(smp_folder):
@@ -190,7 +193,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                     n_active=n_active))
 
             checkpoint_file = os.path.join(
-                smp_folder, 'weights{:d}.hdf5'.format(split_idx))
+                smp_folder, 'weights_best{:d}.hdf5'.format(split_idx))
 
             # Train
             history = fit_model(model, checkpoint_file, train_generator, X_val,
@@ -202,6 +205,18 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             pred = pred.reshape((-1))
             acc = accuracy_score(Y_test, 1 * (pred >= 0.5))
             print('Test accuracy: {:.3f}'.format(acc))
+
+	    # Save model
+	    modeljsonfile = os.path.join(
+	        smp_folder, 'model{:d}.json'.format(split_idx))
+	    model_json = model.to_json()
+ 	    with open(modeljsonfile, 'w') as json_file:
+    		json_file.write(model_json, indent=2)
+
+	    # Save last version of weights (for resuming training)
+            weights_last_file = os.path.join(
+	    	smp_folder, 'weights_last{:d}.hdf5'.format(split_idx))
+	    model.save_weights(weights_last_file)
 
             # Save Y_test and predictions
             ytestfile = os.path.join(
