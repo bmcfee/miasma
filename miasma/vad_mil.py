@@ -68,7 +68,7 @@ def fit_model(model, checkpoint_file, train_generator, X_val, Y_val,
     history = model.fit_generator(train_generator,
                                   samples_per_epoch,
                                   nb_epochs,
-                                  verbose=1,
+                                  verbose=verbose,
                                   validation_data=(X_val, Y_val),
                                   callbacks=[checkpointer])
 
