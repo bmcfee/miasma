@@ -369,7 +369,7 @@ def get_vad_data_generators(
     track_list = split[split_index][1]
     shuffle = False
     with_replacement = False
-    val_batch_size = 1024
+    val_batch_size = batch_size
 
     validate_generator = keras_vad_minibatch_generator(
         root_folder, track_list, augmentations, feature, activation,
@@ -380,7 +380,7 @@ def get_vad_data_generators(
     track_list = split[split_index][2]
     shuffle = False
     with_replacement = False
-    test_batch_size = 1024
+    test_batch_size = batch_size
 
     test_generator = keras_vad_minibatch_generator(
         root_folder, track_list, augmentations, feature, activation,
