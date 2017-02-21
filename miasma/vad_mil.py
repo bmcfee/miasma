@@ -177,7 +177,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
 
             print('\n---------- Split {:d} ----------'.format(split_idx))
 
-            if split_n==0:
+            if split_n == 0:
                 print_model_summary = True
             else:
                 print_model_summary = False
