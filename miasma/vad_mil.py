@@ -211,23 +211,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
 
             # Load data
             if pool_layer == 'none':
-                train_generator, X_val, Y_val, X_test, Y_test = (
-                    get_vad_data_frames(
-                        splitfile=splitfile,
-                        split_index=split_idx,
-                        root_folder=root_folder,
-                        augmentations=['original'],
-                        feature='cqt44100_1024_8_36',
-                        activation='vocal_activation44100_1024',
-                        n_bag_frames=n_bag_frames,
-                        act_threshold=act_threshold,
-                        n_hop_frames=n_hop_frames,
-                        batch_size=batch_size,
-                        n_samples=n_samples,
-                        n_active=n_active))
-
-                # train_generator, validate_generator, test_generator = (
-                #     get_vad_data_generators_frames(
+                # train_generator, X_val, Y_val, X_test, Y_test = (
+                #     get_vad_data_frames(
                 #         splitfile=splitfile,
                 #         split_index=split_idx,
                 #         root_folder=root_folder,
@@ -240,6 +225,21 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 #         batch_size=batch_size,
                 #         n_samples=n_samples,
                 #         n_active=n_active))
+
+                train_generator, validate_generator, test_generator = (
+                    get_vad_data_generators_frames(
+                        splitfile=splitfile,
+                        split_index=split_idx,
+                        root_folder=root_folder,
+                        augmentations=['original'],
+                        feature='cqt44100_1024_8_36',
+                        activation='vocal_activation44100_1024',
+                        n_bag_frames=n_bag_frames,
+                        act_threshold=act_threshold,
+                        n_hop_frames=n_hop_frames,
+                        batch_size=batch_size,
+                        n_samples=n_samples,
+                        n_active=n_active))
 
             else:
                 # train_generator, X_val, Y_val, X_test, Y_test = (

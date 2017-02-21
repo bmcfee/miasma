@@ -225,7 +225,6 @@ def get_vad_data_frames(
 
     X_val = np.asarray(X_val)
     Y_val = np.asarray(Y_val)
-    Y_val = Y_val.reshape(-1, n_bag_frames)
 
     print('Validation set:')
     print(X_val.shape)
