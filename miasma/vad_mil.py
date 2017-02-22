@@ -63,7 +63,9 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
 
     if pool_layer == 'softmax':
         s5 = SqueezeLayer(axis=-1, name='s5')(c4)
-        predictions = SoftMaxPool(name='softmax-pool')(s5)
+        c5 = Convolution1D(1, 10, border_mode='same', activation='sigmoid',
+                           name='c5')(s5)
+        predictions = SoftMaxPool(name='softmax-pool')(c5)
     elif pool_layer == 'max':
         p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
                           border_mode='valid', name='max-pool')(c4)
