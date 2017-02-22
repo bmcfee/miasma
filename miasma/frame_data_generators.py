@@ -131,7 +131,7 @@ def keras_vad_minibatch_generator_frames(
         shuffle, batch_size, n_samples, n_active, with_replacement)
 
     for batch in keras_generator.generate():
-        yield (batch['X'], batch['Y'].reshape(-1))
+        yield (batch['X'], batch['Y'])
 
 
 def get_vad_data_generators_frames(
