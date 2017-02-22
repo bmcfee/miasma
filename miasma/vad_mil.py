@@ -212,7 +212,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
 
             # Load data
             if pool_layer == 'none':
-                train_generator, X_val, Y_val, X_test, Y_test = (
+                (train_generator, X_val, Y_val, ID_val,
+                 X_test, Y_test, ID_test) = (
                     get_vad_data_frames(
                         splitfile=splitfile,
                         split_index=split_idx,
@@ -225,7 +226,10 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                         n_hop_frames=n_hop_frames,
                         batch_size=batch_size,
                         n_samples=n_samples,
-                        n_active=n_active))
+                        n_active=n_active,
+                        train_id=False,
+                        val_id=True,
+                        test_id=True))
 
                 # train_generator, validate_generator, test_generator = (
                 #     get_vad_data_generators_frames(
@@ -243,7 +247,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 #         n_active=n_active))
 
             else:
-                train_generator, X_val, Y_val, X_test, Y_test = (
+                (train_generator, X_val, Y_val, ID_val,
+                 X_test, Y_test, ID_test) = (
                     get_vad_data(
                         splitfile=splitfile,
                         split_index=split_idx,
@@ -257,7 +262,10 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                         n_hop_frames=n_hop_frames,
                         batch_size=batch_size,
                         n_samples=n_samples,
-                        n_active=n_active))
+                        n_active=n_active,
+                        train_id=False,
+                        val_id=True,
+                        test_id=True))
 
                 # train_generator, validate_generator, test_generator = (
                 #     get_vad_data_generators(
@@ -315,14 +323,17 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 smp_folder, 'weights_last{:d}.hdf5'.format(split_idx))
             model.save_weights(weights_last_file)
 
-            # Save Y_test and predictions
+            # Save Y_test, predictions and IDs
             ytestfile = os.path.join(
                 smp_folder, 'ytest{:d}.npy.gz'.format(split_idx))
             yprobfile = os.path.join(
                 smp_folder, 'yprob{:d}.npy.gz'.format(split_idx))
+            yidfile = os.path.join(
+                smp_folder, 'yid{:d}.npy.gz'.format(split_idx))
 
             Y_test.dump(gzip.open(ytestfile, 'wb'))
             pred.dump(gzip.open(yprobfile, 'wb'))
+            ID_test.dump(gzip.open(yidfile, 'wb'))
 
             # Save history
             history_file = os.path.join(

@@ -122,7 +122,8 @@ def keras_vad_minibatch_generator_frames(
         batch_size=1,
         n_samples=None,
         n_active=1000,
-        with_replacement=False):
+        with_replacement=False,
+        with_id=False):
     '''
     '''
     keras_generator = vad_minibatch_generator_frames(
@@ -130,8 +131,12 @@ def keras_vad_minibatch_generator_frames(
         n_bag_frames, act_threshold, n_hop_frames,
         shuffle, batch_size, n_samples, n_active, with_replacement)
 
-    for batch in keras_generator.generate():
-        yield (batch['X'], batch['Y'])
+    if with_id:
+        for batch in keras_generator.generate():
+            yield(batch['X'], batch['Y'], batch['ID'])
+    else:
+        for batch in keras_generator.generate():
+            yield (batch['X'], batch['Y'])
 
 
 def get_vad_data_generators_frames(
@@ -146,7 +151,10 @@ def get_vad_data_generators_frames(
         n_hop_frames=22,
         batch_size=32,
         n_samples=None,
-        n_active=1000):
+        n_active=1000,
+        train_id=False,
+        val_id=True,
+        test_id=True):
 
     # Load data split
     split = np.load(splitfile)
@@ -159,7 +167,8 @@ def get_vad_data_generators_frames(
     train_generator = keras_vad_minibatch_generator_frames(
         root_folder, track_list, augmentations, feature, activation,
         n_bag_frames, act_threshold, n_hop_frames,
-        shuffle, batch_size, n_samples, n_active, with_replacement)
+        shuffle, batch_size, n_samples, n_active, with_replacement,
+        with_id=train_id)
 
     # VALIDATE GENERATOR
     track_list = split[split_index][1]
@@ -170,7 +179,8 @@ def get_vad_data_generators_frames(
     validate_generator = keras_vad_minibatch_generator_frames(
         root_folder, track_list, augmentations, feature, activation,
         n_bag_frames, act_threshold, n_hop_frames,
-        shuffle, val_batch_size, n_samples, n_active, with_replacement)
+        shuffle, val_batch_size, n_samples, n_active, with_replacement,
+        with_id=val_id)
 
     # TEST GENERATOR
     track_list = split[split_index][2]
@@ -181,7 +191,8 @@ def get_vad_data_generators_frames(
     test_generator = keras_vad_minibatch_generator_frames(
         root_folder, track_list, augmentations, feature, activation,
         n_bag_frames, act_threshold, n_hop_frames,
-        shuffle, test_batch_size, n_samples, n_active, with_replacement)
+        shuffle, test_batch_size, n_samples, n_active, with_replacement,
+        with_id=test_id)
 
     return train_generator, validate_generator, test_generator
 
@@ -198,7 +209,10 @@ def get_vad_data_frames(
         n_hop_frames=22,
         batch_size=32,
         n_samples=None,
-        n_active=1000):
+        n_active=1000,
+        train_id=False,
+        val_id=True,
+        test_id=True):
 
     train_generator, validate_generator, test_generator = (
         get_vad_data_generators_frames(
@@ -213,18 +227,25 @@ def get_vad_data_frames(
             n_hop_frames=n_hop_frames,
             batch_size=batch_size,
             n_samples=n_samples,
-            n_active=n_active))
+            n_active=n_active,
+            train_id=train_id,
+            val_id=val_id,
+            test_id=test_id))
 
     # Get full validation & test data
     X_val = []
     Y_val = []
+    ID_val = []
 
     for batch in validate_generator:
         X_val.extend(batch[0])
         Y_val.extend(batch[1])
+        if val_id:
+            ID_val.extend(batch[2])
 
     X_val = np.asarray(X_val)
     Y_val = np.asarray(Y_val)
+    ID_val = np.asarray(ID_val)
 
     print('Validation set:')
     print(X_val.shape)
@@ -235,13 +256,17 @@ def get_vad_data_frames(
 
     X_test = []
     Y_test = []
+    ID_test = []
 
     for batch in test_generator:
         X_test.extend(batch[0])
         Y_test.extend(batch[1])
+        if test_id:
+            ID_test.extend(batch[2])
 
     X_test = np.asarray(X_test)
     Y_test = np.asarray(Y_test)
+    ID_test = np.asarray(ID_test)
 
     print('Test set:')
     print(X_test.shape)
@@ -250,5 +275,5 @@ def get_vad_data_frames(
     print('1: {:d}'.format(np.sum(Y_test == 1)))
     print(' ')
 
-    return train_generator, X_val, Y_val, X_test, Y_test
+    return train_generator, X_val, Y_val, ID_val, X_test, Y_test, ID_test
 
