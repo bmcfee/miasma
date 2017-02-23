@@ -42,7 +42,7 @@ def launch_experiment(expid):
             data_fold[-1] = ' '.join(d)
 
             assert data_fold[4].startswith('#PBS -N ')
-            data_fold[4] = '#PBS -N mil{:d}_{:s}_{:s}\n'.format(
+            data_fold[4] = '#PBS -N mil{:d}_{:s}_{:d}\n'.format(
                 int(expid[3:]), pooling_layer, split_idx)
 
             # add a couple of empty lines at the end
