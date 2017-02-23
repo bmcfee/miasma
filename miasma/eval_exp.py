@@ -147,9 +147,11 @@ def eval_exp(expid):
         print(colored(report, 'magenta', attrs=['bold']))
 
     # PLOT BAG-LEVEL and FRAME-LEVEL BOX PLOTS
-    fig = plt.figure(figsize=(12, 6))
+    # fig = plt.figure(figsize=(12, 6))
     # ax1 = fig.add_subplot(121)
     # ax2 = fig.add_subplot(122)
 
-    df.boxplot(column=['accuracy'], by=['level', 'pooling'])
+    # df.boxplot(column=['accuracy'], by=['level', 'pooling'])
+
+    return df
 
