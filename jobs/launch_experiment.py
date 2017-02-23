@@ -33,8 +33,11 @@ def launch_experiment(expid):
 
             data_fold = data[:]
 
+            assert d[3][:3] == 'exp'
+            d[3] = expid
+
             assert d[-4] == '--split_indices'
-            d[3] = str(split_idx)
+            d[-3] = str(split_idx)
 
             assert d[-2] == '--pool_layers'
             d[-1] = pooling_layer
@@ -53,7 +56,7 @@ def launch_experiment(expid):
                 file.writelines(data_fold)
 
             print(' ')
-            print('Launching %s'.format(os.path.basename(destfile)))
+            print('Launching {:s}'.format(os.path.basename(destfile)))
             print(data_fold[-3])
 
             jobid = subprocess.check_output('qsub {:s}'.format(destfile),
