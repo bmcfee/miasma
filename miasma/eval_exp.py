@@ -5,6 +5,9 @@ import gzip
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from termcolor import colored
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def eval_exp(expid):
@@ -15,8 +18,13 @@ def eval_exp(expid):
 
     split_indices = [2, 3, 4, 5, 6]
 
+    # dataframe for storing ALL results
+    df = pd.DataFrame(
+        columns=['level', 'pooling', 'split', 'accuracy', 'precision',
+                 'recall', 'zeros', 'ones', 'baseline'])
+
     # BAG-LEVEL EVAL
-    print('BAG LEVEL EVALUATION')
+    print('-------------------- BAG LEVEL EVALUATION --------------------')
     # for pool_layer in ['softmax', 'max', 'mean']:
     for pool_layer in ['softmax', 'max']:
 
@@ -57,6 +65,9 @@ def eval_exp(expid):
             split_results.append([acc, precision, recall, zeros, ones,
                                   baseline])
 
+            df.append(['bag', pool_layer, acc, precision, recall, zeros, ones,
+                       baseline])
+
         # Average results
         split_results = np.asarray(split_results)
         avg_acc = split_results[:, 0].mean()
@@ -73,7 +84,7 @@ def eval_exp(expid):
         print(colored(report, 'magenta', attrs=['bold']))
 
     # FRAME-LEVEL EVAL
-    print('FRAME LEVEL EVALUATION')
+    print('\n-------------------- FRAME LEVEL EVALUATION --------------------')
 
     for pool_layer in ['softmax', 'max', 'mean', 'none']:
 
@@ -117,6 +128,9 @@ def eval_exp(expid):
             split_results.append([acc, precision, recall, zeros, ones,
                                   baseline])
 
+            df.append(['frame', pool_layer, acc, precision, recall, zeros, ones,
+                       baseline])
+
         # Average results
         split_results = np.asarray(split_results)
         avg_acc = split_results[:, 0].mean()
@@ -131,4 +145,11 @@ def eval_exp(expid):
             avg_acc, avg_precision, avg_recall, avg_zeros, avg_ones,
             avg_baseline)
         print(colored(report, 'magenta', attrs=['bold']))
+
+    # PLOT BAG-LEVEL and FRAME-LEVEL BOX PLOTS
+    fig = plt.figure(figsize=(12, 6))
+    # ax1 = fig.add_subplot(121)
+    # ax2 = fig.add_subplot(122)
+
+    df.boxplot(column=['acc'], by=['level', 'pooling')
 
