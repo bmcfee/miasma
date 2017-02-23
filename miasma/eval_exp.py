@@ -151,5 +151,5 @@ def eval_exp(expid):
     # ax1 = fig.add_subplot(121)
     # ax2 = fig.add_subplot(122)
 
-    df.boxplot(column=['acc'], by=['level', 'pooling')
+    df.boxplot(column=['acc'], by=['level', 'pooling'])
 
