@@ -22,8 +22,10 @@ def launch_experiment(expid):
     # Get the last line (the one we care about)
     d = data[-1].split(' ')
 
-    for pooling_layer in ['softmax', 'max', 'mean', 'none']:
-        for split_idx in [2, 3, 4, 5, 6]:
+    # for pooling_layer in ['softmax', 'max', 'mean', 'none']:
+    #     for split_idx in [2, 3, 4, 5, 6]:
+    for pooling_layer in ['softmax']:
+        for split_idx in [2]:
 
             # Copy qsub template
             destfile = os.path.expanduser(
