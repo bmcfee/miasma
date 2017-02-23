@@ -66,7 +66,7 @@ def eval_exp(expid):
         avg_baseline = split_results[:, 5].mean()
 
         report = ('averag: acc: {:.2f}\tpre: {:.2f}\trec: {:.2f}' +
-                  '\t0/1: {:d}/{:d}\tbaseline: {:.2f}').format(
+                  '\t0/1: {:.1f}/{:.1f}\tbaseline: {:.2f}').format(
             avg_acc, avg_precision, avg_recall, avg_zeros, avg_ones,
             avg_baseline)
         print(report)
