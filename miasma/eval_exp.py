@@ -86,7 +86,7 @@ def eval_exp(expid):
     # FRAME-LEVEL EVAL
     print('\n-------------------- FRAME LEVEL EVALUATION --------------------')
 
-    for pool_layer in ['softmax', 'max', 'mean', 'none']:
+    for pool_layer in ['softmax', 'max', 'mean']:
 
         print('\n{:s} POOLING'.format(pool_layer.upper()))
         if pool_layer == 'none':
