@@ -3,7 +3,7 @@
 import numpy as np
 import gzip
 import os
-from miasma.miasma.data_generators import batch_mux
+from miasma.data_generators import batch_mux
 import pescador
 
 
