@@ -6,7 +6,7 @@
 #PBS -M justin.salamon@gmail.com
 #PBS -m abe
 #PBS -j oe
-#PBS -p 0
+#PBS -p 1000
 
 module purge
 
