@@ -39,6 +39,8 @@ def launch_prediction(expid):
     assert d[3][:3] == 'exp'
     d[3] = expid
 
+    data_fold[-1] = ' '.join(d)
+
     assert data_fold[4].startswith('#PBS -N ')
     # data_fold[4] = '#PBS -N fpred{:d}_{:s}_{:d}\n'.format(
     #     int(expid[3:]), pooling_layer, split_idx)
