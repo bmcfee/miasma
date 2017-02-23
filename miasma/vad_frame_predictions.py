@@ -88,7 +88,8 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     return model
 
 
-def vad_frame_predictions(expid, pool_layer, split_idx):
+def vad_frame_predictions(expid, pool_layer, split_idx,
+                          print_model_summary=False):
 
     # Load metadata
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
@@ -113,7 +114,7 @@ def vad_frame_predictions(expid, pool_layer, split_idx):
         loss=metadata['loss'],
         optimizer=metadata['optimizer'],
         metrics=metadata['metrics'],
-        print_model_summary=metadata['print_model_summary'],
+        print_model_summary=print_model_summary,
         temp_conv=metadata['temp_conv'],
         min_active_frames=metadata['min_active_frames'])
 
@@ -174,8 +175,19 @@ def vad_frame_predictions(expid, pool_layer, split_idx):
 def run_prediction(expid):
 
     for pool_layer in ['softmax', 'max', 'mean']:
-        for split_idx in [2, 3, 4, 5, 6]:
-            vad_frame_predictions(expid, pool_layer, split_idx)
+        print('\n------------- MODEL: {:s}-pooling -------------'.format(
+            pool_layer))
+
+        for n, split_idx in enumerate([2, 3, 4, 5, 6]):
+            print('\n---------- Split {:d} ----------'.format(split_idx))
+
+            if n == 0:
+                print_model_summary = True
+            else:
+                print_model_summary = False
+
+            vad_frame_predictions(expid, pool_layer, split_idx,
+                                  print_model_summary=print_model_summary)
 
 if __name__ == '__main__':
 
