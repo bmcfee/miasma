@@ -168,7 +168,7 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
 
     Y_test.dump(gzip.open(ytestfile, 'wb'))
     pred.dump(gzip.open(yprobfile, 'wb'))
-    yidfile.dump(gzip.open(yidfile, 'wb'))
+    ID_test.dump(gzip.open(yidfile, 'wb'))
 
 
 def run_prediction(expid):
