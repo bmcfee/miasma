@@ -3,10 +3,10 @@
 import numpy as np
 import os
 import json
-from miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
-from miasma.data_generators import get_vad_data, get_vad_data_generators
-from miasma.frame_data_generators import get_vad_data_frames
-from miasma.frame_data_generators import get_vad_data_generators_frames
+from miasma.miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
+from miasma.miasma.data_generators import get_vad_data, get_vad_data_generators
+from miasma.miasma.frame_data_generators import get_vad_data_frames
+from miasma.miasma.frame_data_generators import get_vad_data_generators_frames
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
