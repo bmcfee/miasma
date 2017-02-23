@@ -18,8 +18,7 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                       kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                       loss='binary_crossentropy', optimizer='adam',
                       metrics=['accuracy'], print_model_summary=True,
-                      temp_conv=False,
-                      min_active_frames=10):
+                      temp_conv=False, min_active_frames=10):
     '''
     Build a model that produces frame-level predictions, with no final pool
     layer.
