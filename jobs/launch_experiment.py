@@ -4,7 +4,6 @@ import argparse
 import os
 import shutil
 import subprocess
-from miasma.vad_mil import run_experiment
 
 
 def launch_experiment(expid):
