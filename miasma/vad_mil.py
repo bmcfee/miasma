@@ -31,7 +31,8 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                 kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                 loss='binary_crossentropy', optimizer='adam',
                 metrics=['accuracy'], pool_layer='softmax',
-                print_model_summary=True):
+                print_model_summary=True, temp_conv=False,
+                min_active_frames=10):
 
     fullheight_kernel_size = (tf_rows, 1)
     if K.image_dim_ordering() == 'th':
@@ -64,22 +65,40 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                        name='c4')(s4)
 
     if pool_layer == 'softmax':
-        # s5 = SqueezeLayer(axis=-1, name='s5')(c4)
-        c5 = Convolution1D(1, 10, border_mode='same', activation='sigmoid',
-                           name='c5')(c4)
-        s5 = SqueezeLayer(axis=-1, name='s5')(c5)
+        if temp_conv:
+            c5 = Convolution1D(1, min_active_frames, border_mode='same',
+                               activation='sigmoid', name='c5')(c4)
+            s5 = SqueezeLayer(axis=-1, name='s5')(c5)
+        else:
+            s5 = SqueezeLayer(axis=-1, name='s5')(c4)
         predictions = SoftMaxPool(name='softmax-pool')(s5)
+
     elif pool_layer == 'max':
-        p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
-                          border_mode='valid', name='max-pool')(c4)
+        if temp_conv:
+            c5 = Convolution1D(1, min_active_frames, border_mode='same',
+                               activation='sigmoid', name='c5')(c4)
+            p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
+                              border_mode='valid', name='max-pool')(c5)
+        else:
+            p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
+                              border_mode='valid', name='max-pool')(c4)
         predictions = SqueezeLayer(axis=-1, name='s5')(p5)
+
     elif pool_layer == 'mean':
-        p5 = AveragePooling1D(pool_length=tf_cols, stride=None,
-                              border_mode='valid', name='mean-pool')(c4)
+        if temp_conv:
+            c5 = Convolution1D(1, min_active_frames, border_mode='same',
+                               activation='sigmoid', name='c5')(c4)
+            p5 = AveragePooling1D(pool_length=tf_cols, stride=None,
+                                  border_mode='valid', name='mean-pool')(c5)
+        else:
+            p5 = AveragePooling1D(pool_length=tf_cols, stride=None,
+                                  border_mode='valid', name='mean-pool')(c4)
         predictions = SqueezeLayer(axis=-1, name='s5')(p5)
+
     elif pool_layer == 'none':
         # predictions = BagToBatchLayer(name='none-pool')(c4)
         predictions = SqueezeLayer(axis=-1, name='s5')(c4)
+
     else:
         print('Unrecognized pooling, using softmax')
         s5 = SqueezeLayer(axis=-1, name='s5')(c4)
@@ -137,7 +156,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    loss='binary_crossentropy', optimizer='adam',
                    metrics=['accuracy', 'precision', 'recall'],
                    split_indices=[2, 3, 4, 5, 6],
-                   pool_layers=['max', 'mean', 'softmax']):
+                   pool_layers=['max', 'mean', 'softmax'],
+                   temp_conv=False):
 
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
@@ -188,6 +208,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             'loss': loss,
             'optimizer': optimizer,
             'metrics': metrics,
+            'temp_conv': temp_conv,
             'pool_layer': pool_layer,
             'theano_version': theano.__version__,
             'keras_version:': keras.__version__,
@@ -213,7 +234,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 kernel_sizes=kernel_sizes,
                 nb_fullheight_filters=nb_fullheight_filters, loss=loss,
                 optimizer=optimizer, metrics=metrics, pool_layer=pool_layer,
-                print_model_summary=print_model_summary)
+                print_model_summary=print_model_summary, temp_conv=temp_conv,
+                min_active_frames=min_active_frames)
 
             # Load data
             if pool_layer == 'none':
@@ -374,6 +396,7 @@ if __name__ == '__main__':
                         default=[2, 3, 4, 5, 6])
     parser.add_argument('--pool_layers', type=str, nargs='+',
                         default=['max', 'mean', 'softmax'])
+    parser.add_argument('--temp_conv', type=int, default=0)
 
     args = parser.parse_args()
 
@@ -389,6 +412,8 @@ if __name__ == '__main__':
         t = (args.kernel_sizes[ind], args.kernel_sizes[ind+1])
         kernel_sizes.append(t)
         ind += 2
+
+    temp_conv = bool(args.temp_conv)
 
     # # debug
     # print('{:s}\ttype={:s}\t{:s}'.format('kernel_sizes',
@@ -414,5 +439,6 @@ if __name__ == '__main__':
                    loss=args.loss, optimizer=args.optimizer,
                    metrics=args.metrics,
                    split_indices=args.split_indices,
-                   pool_layers=args.pool_layers)
+                   pool_layers=args.pool_layers,
+                   temp_conv=temp_conv)
 
