@@ -3,9 +3,10 @@
 import numpy as np
 import os
 import json
-from miasma.miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
-from miasma.miasma.data_generators import get_vad_data, get_vad_data_generators
-from miasma.miasma.frame_data_generators import get_vad_data_frames, get_vad_data_generators_frames
+from miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
+from miasma.data_generators import get_vad_data, get_vad_data_generators
+from miasma.frame_data_generators import get_vad_data_frames
+from miasma.frame_data_generators import get_vad_data_generators_frames
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
@@ -20,6 +21,7 @@ import pescador
 from sklearn.metrics import accuracy_score
 import gzip
 import sys
+import argparse
 
 np.random.seed(1337)  # for reproducibility
 sys.setrecursionlimit(50000) # to pickle keras history objects
@@ -47,11 +49,11 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     c1 = Convolution2D(nb_filters[0], kernel_sizes[0][0], kernel_sizes[0][1],
                        border_mode='same', activation='relu', name='c1')(b1)
 
-    # b2 = BatchNormalization(name='b2')(c1)
-    # c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0], kernel_sizes[1][1],
-    #                    border_mode='same', activation='relu', name='c2')(b2)
+    b2 = BatchNormalization(name='b2')(c1)
+    c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0], kernel_sizes[1][1],
+                       border_mode='same', activation='relu', name='c2')(b2)
 
-    b3 = BatchNormalization(name='b3')(c1)
+    b3 = BatchNormalization(name='b3')(c2)
     c3 = Convolution2D(nb_fullheight_filters, fullheight_kernel_size[0],
                        fullheight_kernel_size[1], border_mode='valid',
                        activation='relu', name='c3')(b3)
@@ -342,4 +344,75 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             history_file = os.path.join(
                 smp_folder, 'history{:d}.pkl'.format(split_idx))
             pickle.dump(history, open(history_file, 'wb'))
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('expid', type=str)
+    parser.add_argument('--n_bag_frames', type=int, default=44)
+    parser.add_argument('--min_active_frames', type=int, default=10)
+    parser.add_argument('--act_threshold', type=float, default=0.5)
+    parser.add_argument('--n_hop_frames', type=int, default=22)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--n_samples', type=int, default=None)
+    parser.add_argument('--n_active', type=int, default=1000)
+    parser.add_argument('--samples_per_epoch', type=int, default=1024)
+    parser.add_argument('--nb_epochs', type=int, default=50)
+    parser.add_argument('--verbose', type=int, default=1)
+    parser.add_argument('--tf_rows', type=int, default=288)
+    parser.add_argument('--tf_cols', type=int, default=44)
+    parser.add_argument('--nb_filters', type=int, nargs='+', default=[32, 16])
+    parser.add_argument('--kernel_sizes', type=int, nargs='+',
+                        default=[3, 3, 3, 3])
+    parser.add_argument('--nb_fullheight_filters', type=int, default=16)
+    parser.add_argument('--loss', type=str, default='binary_crossentropy')
+    parser.add_argument('--optimizer', type=str, default='adam')
+    parser.add_argument('--metrics', type=str, nargs='+',
+                        default=['accuracy', 'precision', 'recall'])
+    parser.add_argument('--split_indices', type=int, nargs='+',
+                        default=[2, 3, 4, 5, 6])
+    parser.add_argument('--pool_layers', type=str, nargs='+',
+                        default=['max', 'mean', 'softmax'])
+
+    args = parser.parse_args()
+
+    # # debug
+    # for arg in vars(args):
+    #     print('{:s}\ttype={:s}\t{:s}'.format(
+    #         arg, str(type(getattr(args, arg))), str(getattr(args, arg))))
+
+    # Convert kernel_sizes into list of tuple
+    ind = 0
+    kernel_sizes = []
+    while ind < len(args.kernel_sizes):
+        t = (args.kernel_sizes[ind], args.kernel_sizes[ind+1])
+        kernel_sizes.append(t)
+        ind += 2
+
+    # # debug
+    # print('{:s}\ttype={:s}\t{:s}'.format('kernel_sizes',
+    #                                      str(type(kernel_sizes)),
+    #                                      str(kernel_sizes)))
+
+    run_experiment(args.expid,
+                   n_bag_frames=args.n_bag_frames,
+                   min_active_frames=args.min_active_frames,
+                   act_threshold=args.act_threshold,
+                   n_hop_frames=args.n_hop_frames,
+                   batch_size=args.batch_size,
+                   n_samples=args.n_samples,
+                   n_active=args.n_active,
+                   samples_per_epoch=args.samples_per_epoch,
+                   nb_epochs=args.nb_epochs,
+                   verbose=args.verbose,
+                   tf_rows=args.tf_rows,
+                   tf_cols=args.tf_cols,
+                   nb_filters=args.nb_filters,
+                   kernel_sizes=kernel_sizes,
+                   nb_fullheight_filters=args.nb_fullheight_filters,
+                   loss=args.loss, optimizer=args.optimizer,
+                   metrics=args.metrics,
+                   split_indices=args.split_indices,
+                   pool_layers=args.pool_layers)
 
