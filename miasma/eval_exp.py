@@ -17,7 +17,8 @@ def eval_exp(expid):
 
     # BAG-LEVEL EVAL
     print('BAG LEVEL EVALUATION')
-    for pool_layer in ['softmax', 'max', 'mean']:
+    # for pool_layer in ['softmax', 'max', 'mean']:
+    for pool_layer in ['softmax', 'max']:
 
         print('\n{:s} POOLING'.format(pool_layer.upper()))
         smp_folder = os.path.join(model_folder, pool_layer)
