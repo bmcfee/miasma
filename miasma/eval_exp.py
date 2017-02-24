@@ -231,10 +231,9 @@ def eval_exp(expid):
             report = ('split{:d}: BEST epoch ({:d}): acc: {:.2f}\tpre: {:.2f}\t'
                       'rec: {:.2f}\tLAST epoch ({:d}):acc: {:.2f}\tpre: '
                       '{:.2f}\trec: {:.2f})').format(
-                split_idx, tm['best_epoch'], tm['best_acc'],
-                tm['best_precision'], tm['best_recall'],
-                tm['last_epoch'], tm['last_acc'], tm['last_precision'],
-                tm['last_recall'])
+                split_idx, tm['best_epoch'], tm['best_acc'], tm['best_pre'],
+                tm['best_rec'], tm['last_epoch'], tm['last_acc'],
+                tm['last_pre'], tm['last_rec'])
             print(report)
 
     return df
