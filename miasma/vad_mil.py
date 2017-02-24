@@ -363,6 +363,10 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             ID_test.dump(gzip.open(yidfile, 'wb'))
 
             # Save history
+            history_score_file = os.path.join(
+                smp_folder, 'history_scores{:d}.json'.format(split_idx))
+            json.dump(history.history, open(history_score_file, 'w'), indent=2)
+
             history_file = os.path.join(
                 smp_folder, 'history{:d}.pkl'.format(split_idx))
             pickle.dump(history, open(history_file, 'wb'))
