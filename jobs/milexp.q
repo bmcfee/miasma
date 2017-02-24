@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -l nodes=1:ppn=1:gpus=1
 #PBS -l walltime=03:00:00
-#PBS -l mem=16gb
+#PBS -l mem=32gb
 #PBS -N mil
 #PBS -M justin.salamon@gmail.com
 #PBS -m abe
@@ -22,4 +22,4 @@ module load sox/intel/14.4.1
 
 source activate py35hpcT9b
 
-THEANO_FLAGS="base_compiledir=$PBS_JOBTMP,device=gpu,floatX=float32,mode=FAST_RUN" python $SRCDIR/miasma/vad_mil.py exp001 --n_bag_frames 44 --min_active_frames 10 --act_threshold 0.5 --n_hop_frames 22 --batch_size 32 --n_active 1000 --samples_per_epoch 1024 --nb_epochs 50 --verbose 2 --tf_rows 288 --tf_cols 44 --nb_filters 32 32 --kernel_sizes 3 3 3 3 --nb_fullheight_filters 32 --loss binary_crossentropy --optimizer adam --metrics accuracy precision recall --split_indices 2 --pool_layers softmax --temp_conv 0
+THEANO_FLAGS="base_compiledir=$PBS_JOBTMP,device=gpu,floatX=float32,mode=FAST_RUN" python $SRCDIR/miasma/vad_mil.py exp001 --n_bag_frames 44 --min_active_frames 10 --act_threshold 0.5 --n_hop_frames 22 --batch_size 32 --n_active 1000 --samples_per_epoch 1024 --nb_epochs 50 --verbose 2 --tf_rows 288 --tf_cols 44 --nb_filters 32 32 --kernel_sizes 5 5 5 5 --nb_fullheight_filters 32 --loss binary_crossentropy --optimizer adam --metrics accuracy precision recall --split_indices 2 --pool_layers softmax --temp_conv 0
