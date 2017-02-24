@@ -8,6 +8,71 @@ from termcolor import colored
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import json
+
+
+def training_report(history_score_file):
+
+    history = json.load(open(history_score_file, 'r'))
+
+    best_epoch = np.argmin(history['val_loss'])
+    print('Lowest validation loss at epoch (starting from 1): {:d}'.format(
+        best_epoch + 1))
+    print(('Training metrics at epoch {:d}: acc: {:.2f}\tpre: {:.2f}'
+           '\trec:{:.2f}').format(best_epoch+1, history['acc'][best_epoch],
+                                  history['precision'][best_epoch],
+                                  history['recall'][best_epoch]))
+
+    print(('Training metrics at last epoch ({:d}): acc: {:.2f}\tpre: {:.2f}'
+           '\trec:{:.2f}').format(len(history['acc']),
+                                  history['acc'][best_epoch],
+                                  history['precision'][best_epoch],
+                                  history['recall'][best_epoch]))
+    print('Training curves:')
+    epochs = np.arange(1, len(history['acc']) + 1)
+    fig = plt.figure()
+
+    ax1 = fig.add_subplot(121)
+    plt.plot(epochs, history['acc'])
+    plt.plot(epochs, history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validate'], loc='upper left')
+    plt.show()
+
+    # summarize history for loss
+    ax2 = fig.add_subplot(122)
+    plt.plot(epochs, history['loss'])
+    plt.plot(epochs, history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validate'], loc='upper left')
+    plt.show()
+
+
+def training_metrics(history_score_file):
+    history = json.load(open(history_score_file, 'r'))
+
+    best_epoch = np.argmin(history['val_loss'])
+    best_acc = history['acc'][best_epoch]
+    best_pre = history['precision'][best_epoch]
+    best_rec = history['recall'][best_epoch]
+
+    last_epoch = len(history['acc']) - 1
+    last_acc = history['acc'][-1]
+    last_pre = history['precision'][-1]
+    last_rec = history['recall'][-1]
+
+    return {'best_epoch': best_epoch,
+            'best_acc': best_acc,
+            'best_pre': best_pre,
+            'best_rec': best_rec,
+            'last_epoch': last_epoch,
+            'last_acc': last_acc,
+            'last_pre': last_pre,
+            'last_rec': last_rec}
 
 
 def eval_exp(expid):
@@ -150,7 +215,28 @@ def eval_exp(expid):
     ax = fig.gca()
     df.boxplot(column=['accuracy'], by=['level', 'pooling'], ax=ax)
     plt.show()
-    
+
+    # Training report
+    print('\n-------------------- TRAINING REPORT --------------------')
+    for pool_layer in ['softmax', 'max', 'mean', 'none']:
+        print('\n{:s} POOLING'.format(pool_layer.upper()))
+        smp_folder = os.path.join(model_folder, pool_layer)
+
+        for split_n, split_idx in enumerate(split_indices):
+
+            hscorefile = os.path.join(
+                smp_folder, 'history_scores{:d}.json'.format(split_idx))
+            tm = training_metrics(hscorefile)
+
+            report = ('split{:d}: BEST epoch ({:d}): acc: {:.2f}\tpre: {:.2f}\t'
+                      'rec: {:.2f}\tLAST epoch ({:d}):acc: {:.2f}\tpre: '
+                      '{:.2f}\trec: {:.2f})').format(
+                split_idx, tm['best_epoch'], tm['best_acc'],
+                tm['best_precision'], tm['best_recall'],
+                tm['last_epoch'], tm['last_acc'], tm['last_precision'],
+                tm['last_recall'])
+            print(report)
+
     return df
 
 
