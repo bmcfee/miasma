@@ -25,8 +25,7 @@ def eval_exp(expid):
 
     # BAG-LEVEL EVAL
     print('-------------------- BAG LEVEL EVALUATION --------------------')
-    # for pool_layer in ['softmax', 'max', 'mean']:
-    for pool_layer in ['softmax', 'max']:
+    for pool_layer in ['softmax', 'max', 'mean']:
 
         print('\n{:s} POOLING'.format(pool_layer.upper()))
         smp_folder = os.path.join(model_folder, pool_layer)
@@ -65,8 +64,8 @@ def eval_exp(expid):
             split_results.append([acc, precision, recall, zeros, ones,
                                   baseline])
 
-            df.append(['bag', pool_layer, acc, precision, recall, zeros, ones,
-                       baseline])
+            df.loc[len(df)] = (['bag', pool_layer, split_idx, acc, precision, 
+                                recall, zeros, ones, baseline])
 
         # Average results
         split_results = np.asarray(split_results)
@@ -86,7 +85,7 @@ def eval_exp(expid):
     # FRAME-LEVEL EVAL
     print('\n-------------------- FRAME LEVEL EVALUATION --------------------')
 
-    for pool_layer in ['softmax', 'max', 'mean']:
+    for pool_layer in ['softmax', 'max', 'mean', 'none']:
 
         print('\n{:s} POOLING'.format(pool_layer.upper()))
         if pool_layer == 'none':
@@ -128,8 +127,8 @@ def eval_exp(expid):
             split_results.append([acc, precision, recall, zeros, ones,
                                   baseline])
 
-            df.append(['frame', pool_layer, acc, precision, recall, zeros, ones,
-                       baseline])
+            df.loc[len(df)] = (['frame', pool_layer, split_idx, acc, 
+                                precision, recall, zeros, ones, baseline])
 
         # Average results
         split_results = np.asarray(split_results)
@@ -147,11 +146,11 @@ def eval_exp(expid):
         print(colored(report, 'magenta', attrs=['bold']))
 
     # PLOT BAG-LEVEL and FRAME-LEVEL BOX PLOTS
-    # fig = plt.figure(figsize=(12, 6))
-    # ax1 = fig.add_subplot(121)
-    # ax2 = fig.add_subplot(122)
-
-    # df.boxplot(column=['accuracy'], by=['level', 'pooling'])
-
+    fig = plt.figure(figsize=(12, 6))
+    ax = fig.gca()
+    df.boxplot(column=['accuracy'], by=['level', 'pooling'], ax=ax)
+    plt.show()
+    
     return df
+
 
