@@ -250,15 +250,15 @@ def eval_exp(expid):
         last_rec = np.asarray([d['last_rec'] for d in tm_all])
         report = (
             'BEST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) avg: acc {:.2f}\t'
-            'pre {:.2f}\trec {:.2f}'.format(
-                tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
-                                     best_rec.mean())))
+            'pre {:.2f}\trec {:.2f}').format(
+            tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
+                                 best_rec.mean()))
         print(report)
         report = (
             'LAST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) avg: acc {:.2f}\t'
-            'pre {:.2f}\trec {:.2f}'.format(
-                tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
-                                     last_rec.mean())))
+            'pre {:.2f}\trec {:.2f}').format(
+            tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
+                                 last_rec.mean()))
         print(report)
 
     return df
