@@ -56,7 +56,7 @@ def training_report(model_folder, split_indices):
         for split_n, split_idx in enumerate(split_indices):
             hscorefile = os.path.join(
                 smp_folder, 'history_scores{:d}.json'.format(split_idx))
-            hscore = np.load(hscorefile)
+            hscore = json.load(open(hscorefile, 'r'))
             if pool_layer not in acc_curves.keys():
                 acc_curves[pool_layer] = {'train': [], 'val': []}
                 loss_curves[pool_layer] = {'train': [], 'val': []}
