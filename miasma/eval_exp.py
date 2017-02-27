@@ -152,7 +152,8 @@ def eval_exp(expid):
                  'recall', 'zeros', 'ones', 'baseline'])
 
     # BAG-LEVEL EVAL
-    print('\n-------------------- BAG LEVEL EVALUATION --------------------')
+    print('\n-------------------- TEST REPORT: BAG LEVEL EVALUATION '
+          '--------------------')
     for pool_layer in ['softmax', 'max', 'mean']:
 
         print('\n{:s} POOLING'.format(pool_layer.upper()))
@@ -211,7 +212,8 @@ def eval_exp(expid):
         print(colored(report, 'magenta', attrs=['bold']))
 
     # FRAME-LEVEL EVAL
-    print('\n-------------------- FRAME LEVEL EVALUATION --------------------')
+    print('\n-------------------- TEST REPORT: FRAME LEVEL EVALUATION '
+          '--------------------')
 
     for pool_layer in ['softmax', 'max', 'mean', 'none']:
 
