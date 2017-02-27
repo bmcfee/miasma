@@ -222,19 +222,44 @@ def eval_exp(expid):
         print('\n{:s} POOLING'.format(pool_layer.upper()))
         smp_folder = os.path.join(model_folder, pool_layer)
 
+        tm_all = []
+
         for split_n, split_idx in enumerate(split_indices):
 
             hscorefile = os.path.join(
                 smp_folder, 'history_scores{:d}.json'.format(split_idx))
             tm = training_metrics(hscorefile)
+            tm_allsplits.append(tm)
 
-            report = ('split{:d}: BEST epoch ({:d}): acc: {:.2f}\tpre: {:.2f}\t'
-                      'rec: {:.2f}\tLAST epoch ({:d}):acc: {:.2f}\tpre: '
-                      '{:.2f}\trec: {:.2f})').format(
-                split_idx, tm['best_epoch'], tm['best_acc'], tm['best_pre'],
-                tm['best_rec'], tm['last_epoch'], tm['last_acc'],
-                tm['last_pre'], tm['last_rec'])
-            print(report)
+            # report = ('split{:d}: BEST epoch ({:d}): acc: {:.2f}\tpre: {:.2f}\t'
+            #           'rec: {:.2f}\tLAST epoch ({:d}):acc: {:.2f}\tpre: '
+            #           '{:.2f}\trec: {:.2f})').format(
+            #     split_idx, tm['best_epoch'], tm['best_acc'], tm['best_pre'],
+            #     tm['best_rec'], tm['last_epoch'], tm['last_acc'],
+            #     tm['last_pre'], tm['last_rec'])
+            # print(report)
+
+        tm_all = np.asarray(tm_all)
+        best_epoch = np.asarray([d['best_epoch'] for d in tm_all])
+        best_acc = np.asarray([d['best_acc'] for d in tm_all])
+        best_pre = np.asarray([d['best_pre'] for d in tm_all])
+        best_rec = np.asarray([d['best_rec'] for d in tm_all])
+        last_epoch = np.asarray([d['last_epoch'] for d in tm_all])
+        last_acc = np.asarray([d['last_acc'] for d in tm_all])
+        last_pre = np.asarray([d['last_pre'] for d in tm_all])
+        last_rec = np.asarray([d['last_rec'] for d in tm_all])
+        report = (
+            'BEST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) avg: acc {:.2f}\t'
+            'pre {:.2f}\trec {:.2f}'.format(
+                tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
+                                     best_rec.mean())))
+        print(report)
+        report = (
+            'LAST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) avg: acc {:.2f}\t'
+            'pre {:.2f}\trec {:.2f}'.format(
+                tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
+                                     last_rec.mean())))
+        print(report)
 
     return df
 
