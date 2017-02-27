@@ -65,7 +65,6 @@ def training_report(model_folder, split_indices):
             loss_curves[pool_layer]['train'].append(hscore['loss'])
             loss_curves[pool_layer]['val'].append(hscore['val_loss'])
 
-    epochs = np.arange(tm_all.shape[1])
     sns_palette = sns.color_palette()
 
     # Accuracy plots
@@ -73,9 +72,11 @@ def training_report(model_folder, split_indices):
     for npool, pool_layer in enumerate(['softmax', 'max', 'mean', 'none']):
         ax = axs[npool]
         for n, curve in enumerate(acc_curves[pool_layer]['train']):
+            epochs = np.arange(len(curve))
             label = 'train' if n == 0 else None
             ax.plot(epochs, curve, color=sns_palette[n], label=label)
         for n, curve in enumerate(acc_curves[pool_layer]['val']):
+            epochs = np.arange(len(curve))
             label = 'validation' if n == 0 else None
             ax.plot(epochs, curve, ':', color=sns_palette[n], label=label)
             ax.plot(np.argmax(curve), curve[np.argmax(curve)], 'ko')
@@ -91,9 +92,11 @@ def training_report(model_folder, split_indices):
     for npool, pool_layer in enumerate(['softmax', 'max', 'mean', 'none']):
         ax = axs[npool]
         for n, curve in enumerate(loss_curves[pool_layer]['train']):
+            epochs = np.arange(len(curve))
             label = 'train' if n == 0 else None
             ax.plot(epochs, curve, color=sns_palette[n], label=label)
         for n, curve in enumerate(loss_curves[pool_layer]['val']):
+            epochs = np.arange(len(curve))
             label = 'validation' if n == 0 else None
             ax.plot(epochs, curve, ':', color=sns_palette[n], label=label)
             ax.plot(np.argmax(curve), curve[np.argmax(curve)], 'ko')
