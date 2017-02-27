@@ -248,17 +248,17 @@ def eval_exp(expid):
         last_acc = np.asarray([d['last_acc'] for d in tm_all])
         last_pre = np.asarray([d['last_pre'] for d in tm_all])
         last_rec = np.asarray([d['last_rec'] for d in tm_all])
-        report = (
-            'BEST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) avg: acc {:.2f}\t'
-            'pre {:.2f}\trec {:.2f}').format(
-            tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
-                                 best_rec.mean()))
+        report = ('BEST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) average: acc {:.2f}\t'
+                  'pre {:.2f}\trec {:.2f}')
+        report_tuple = tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
+                                            best_rec.mean())
+        report = report.format(*report_tuple)
         print(report)
-        report = (
-            'LAST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) avg: acc {:.2f}\t'
-            'pre {:.2f}\trec {:.2f}').format(
-            tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
-                                 last_rec.mean()))
+        report = ('LAST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) average: acc {:.2f}\t'
+                  'pre {:.2f}\trec {:.2f}')
+        report_tuple = tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
+                                            last_rec.mean())
+        report = report.format(*report_tuple)
         print(report)
 
     return df
