@@ -15,7 +15,7 @@ def training_report(model_folder, split_indices):
 
     print('\n-------------------- TRAINING REPORT --------------------')
     for pool_layer in ['softmax', 'max', 'mean', 'none']:
-        print('\n{:s} POOLING'.format(pool_layer.upper()))
+        print('\n{:s} POOLING (training set)'.format(pool_layer.upper()))
         smp_folder = os.path.join(model_folder, pool_layer)
 
         tm_all = []
@@ -143,13 +143,16 @@ def eval_exp(expid):
 
     split_indices = [2, 3, 4, 5, 6]
 
+    # Start with training report
+    training_report(model_folder, split_indices)
+
     # dataframe for storing ALL results
     df = pd.DataFrame(
         columns=['level', 'pooling', 'split', 'accuracy', 'precision',
                  'recall', 'zeros', 'ones', 'baseline'])
 
     # BAG-LEVEL EVAL
-    print('-------------------- BAG LEVEL EVALUATION --------------------')
+    print('\n-------------------- BAG LEVEL EVALUATION --------------------')
     for pool_layer in ['softmax', 'max', 'mean']:
 
         print('\n{:s} POOLING'.format(pool_layer.upper()))
@@ -275,9 +278,6 @@ def eval_exp(expid):
     ax = fig.gca()
     df.boxplot(column=['accuracy'], by=['level', 'pooling'], ax=ax)
     plt.show()
-
-    # Training report
-
 
     return df
 
