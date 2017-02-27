@@ -62,33 +62,47 @@ def training_report(model_folder, split_indices):
                 loss_curves[pool_layer] = {'train': [], 'val': []}
             acc_curves[pool_layer]['train'].append(hscore['acc'])
             acc_curves[pool_layer]['val'].append(hscore['val_acc'])
-            loss_curves[pool_layer]['train'].append(hscore['acc'])
-            loss_curves[pool_layer]['val'].append(hscore['val_acc'])
+            loss_curves[pool_layer]['train'].append(hscore['loss'])
+            loss_curves[pool_layer]['val'].append(hscore['val_loss'])
 
-    # # epochs = np.arange(1, len(hscore['acc']) + 1)
-    # epochs = np.arange(len(hscore['acc']))
-    # # fig = plt.figure()
-    # # ax1 = fig.add_subplot(221)
-    #
-    # for pool_layer in ['softmax', 'max', 'mean', 'none']:
-    #     fig = plt.figure()
-    #     plt.plot(epochs, acc_curves['train'], 'b')
-    #     plt.plot(epochs, acc_curves['val'], 'r')
-    #     plt.title('training accuracy')
-    #     plt.ylabel('accuracy')
-    #     plt.xlabel('epoch')
-    #     plt.legend(['train', 'validate'], loc='upper left')
-    #     plt.show()
-    #
-    # # # summarize history for loss
-    # # ax2 = fig.add_subplot(222)
-    # # plt.plot(epochs, history['loss'])
-    # # plt.plot(epochs, history['val_loss'])
-    # # plt.title('model loss')
-    # # plt.ylabel('loss')
-    # # plt.xlabel('epoch')
-    # # plt.legend(['train', 'validate'], loc='upper left')
-    # # plt.show()
+    epochs = np.arange(tm_all.shape[1])
+    sns_palette = sns.color_palette()
+
+    # Accuracy plots
+    fig, axs = plt.subplots(1, 4, figsize=(16, 4))
+    for npool, pool_layer in enumerate(['softmax', 'max', 'mean', 'none']):
+        ax = axs[npool]
+        for n, curve in enumerate(acc_curves[pool_layer]['train']):
+            label = 'train' if n == 0 else None
+            ax.plot(epochs, curve, color=sns_palette[n], label=label)
+        for n, curve in enumerate(acc_curves[pool_layer]['val']):
+            label = 'validation' if n == 0 else None
+            ax.plot(epochs, curve, ':', color=sns_palette[n], label=label)
+            ax.plot(np.argmax(curve), curve[np.argmax(curve)], 'ko')
+        ax.set_title('{:s}'.format(pool_layer))
+        ax.set_ylabel('accuracy')
+        ax.set_xlabel('epoch')
+        ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # Loss plots
+    fig, axs = plt.subplots(1, 4, figsize=(16, 4))
+    for npool, pool_layer in enumerate(['softmax', 'max', 'mean', 'none']):
+        ax = axs[npool]
+        for n, curve in enumerate(loss_curves[pool_layer]['train']):
+            label = 'train' if n == 0 else None
+            ax.plot(epochs, curve, color=sns_palette[n], label=label)
+        for n, curve in enumerate(loss_curves[pool_layer]['val']):
+            label = 'validation' if n == 0 else None
+            ax.plot(epochs, curve, ':', color=sns_palette[n], label=label)
+            ax.plot(np.argmax(curve), curve[np.argmax(curve)], 'ko')
+        ax.set_title('{:s}'.format(pool_layer))
+        ax.set_ylabel('accuracy')
+        ax.set_xlabel('epoch')
+        ax.legend()
+    plt.tight_layout()
+    plt.show()
 
     return acc_curves, loss_curves
 
