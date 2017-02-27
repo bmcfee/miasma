@@ -11,45 +11,86 @@ import seaborn as sns
 import json
 
 
-def training_report(history_score_file):
+def training_report(model_folder, split_indices):
 
-    history = json.load(open(history_score_file, 'r'))
+    print('\n-------------------- TRAINING REPORT --------------------')
+    for pool_layer in ['softmax', 'max', 'mean', 'none']:
+        print('\n{:s} POOLING'.format(pool_layer.upper()))
+        smp_folder = os.path.join(model_folder, pool_layer)
 
-    best_epoch = np.argmin(history['val_loss'])
-    print('Lowest validation loss at epoch (starting from 1): {:d}'.format(
-        best_epoch + 1))
-    print(('Training metrics at epoch {:d}: acc: {:.2f}\tpre: {:.2f}'
-           '\trec:{:.2f}').format(best_epoch+1, history['acc'][best_epoch],
-                                  history['precision'][best_epoch],
-                                  history['recall'][best_epoch]))
+        tm_all = []
 
-    print(('Training metrics at last epoch ({:d}): acc: {:.2f}\tpre: {:.2f}'
-           '\trec:{:.2f}').format(len(history['acc']),
-                                  history['acc'][best_epoch],
-                                  history['precision'][best_epoch],
-                                  history['recall'][best_epoch]))
-    print('Training curves:')
-    epochs = np.arange(1, len(history['acc']) + 1)
-    fig = plt.figure()
+        for split_n, split_idx in enumerate(split_indices):
+            hscorefile = os.path.join(
+                smp_folder, 'history_scores{:d}.json'.format(split_idx))
+            tm = training_metrics(hscorefile)
+            tm_all.append(tm)
 
-    ax1 = fig.add_subplot(121)
-    plt.plot(epochs, history['acc'])
-    plt.plot(epochs, history['val_acc'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validate'], loc='upper left')
-    plt.show()
+        tm_all = np.asarray(tm_all)
+        best_epoch = np.asarray([d['best_epoch'] for d in tm_all])
+        best_acc = np.asarray([d['best_acc'] for d in tm_all])
+        best_pre = np.asarray([d['best_pre'] for d in tm_all])
+        best_rec = np.asarray([d['best_rec'] for d in tm_all])
+        last_epoch = np.asarray([d['last_epoch'] for d in tm_all])
+        last_acc = np.asarray([d['last_acc'] for d in tm_all])
+        last_pre = np.asarray([d['last_pre'] for d in tm_all])
+        last_rec = np.asarray([d['last_rec'] for d in tm_all])
+        report = ('BEST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) average: acc {:.2f}\t'
+                  'pre {:.2f}\trec {:.2f}')
+        report_tuple = tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
+                                            best_rec.mean())
+        report = report.format(*report_tuple)
+        print(report)
+        report = ('LAST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) average: acc {:.2f}\t'
+                  'pre {:.2f}\trec {:.2f}')
+        report_tuple = tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
+                                            last_rec.mean())
+        report = report.format(*report_tuple)
+        print(report)
 
-    # summarize history for loss
-    ax2 = fig.add_subplot(122)
-    plt.plot(epochs, history['loss'])
-    plt.plot(epochs, history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validate'], loc='upper left')
-    plt.show()
+    # Collect training curves
+    acc_curves = {}
+    loss_curves = {}
+    for pool_layer in ['softmax', 'max', 'mean', 'none']:
+        smp_folder = os.path.join(model_folder, pool_layer)
+        for split_n, split_idx in enumerate(split_indices):
+            hscorefile = os.path.join(
+                smp_folder, 'history_scores{:d}.json'.format(split_idx))
+            hscore = np.load(hscorefile)
+            if pool_layer not in acc_curves.keys():
+                acc_curves[pool_layer] = {'train': [], 'val': []}
+                loss_curves[pool_layer] = {'train': [], 'val': []}
+            acc_curves[pool_layer]['train'].append(hscore['acc'])
+            acc_curves[pool_layer]['val'].append(hscore['val_acc'])
+            loss_curves[pool_layer]['train'].append(hscore['acc'])
+            loss_curves[pool_layer]['val'].append(hscore['val_acc'])
+
+    # # epochs = np.arange(1, len(hscore['acc']) + 1)
+    # epochs = np.arange(len(hscore['acc']))
+    # # fig = plt.figure()
+    # # ax1 = fig.add_subplot(221)
+    #
+    # for pool_layer in ['softmax', 'max', 'mean', 'none']:
+    #     fig = plt.figure()
+    #     plt.plot(epochs, acc_curves['train'], 'b')
+    #     plt.plot(epochs, acc_curves['val'], 'r')
+    #     plt.title('training accuracy')
+    #     plt.ylabel('accuracy')
+    #     plt.xlabel('epoch')
+    #     plt.legend(['train', 'validate'], loc='upper left')
+    #     plt.show()
+    #
+    # # # summarize history for loss
+    # # ax2 = fig.add_subplot(222)
+    # # plt.plot(epochs, history['loss'])
+    # # plt.plot(epochs, history['val_loss'])
+    # # plt.title('model loss')
+    # # plt.ylabel('loss')
+    # # plt.xlabel('epoch')
+    # # plt.legend(['train', 'validate'], loc='upper left')
+    # # plt.show()
+
+    return acc_curves, loss_curves
 
 
 def training_metrics(history_score_file):
@@ -217,49 +258,7 @@ def eval_exp(expid):
     plt.show()
 
     # Training report
-    print('\n-------------------- TRAINING REPORT --------------------')
-    for pool_layer in ['softmax', 'max', 'mean', 'none']:
-        print('\n{:s} POOLING'.format(pool_layer.upper()))
-        smp_folder = os.path.join(model_folder, pool_layer)
 
-        tm_all = []
-
-        for split_n, split_idx in enumerate(split_indices):
-
-            hscorefile = os.path.join(
-                smp_folder, 'history_scores{:d}.json'.format(split_idx))
-            tm = training_metrics(hscorefile)
-            tm_all.append(tm)
-
-            # report = ('split{:d}: BEST epoch ({:d}): acc: {:.2f}\tpre: {:.2f}\t'
-            #           'rec: {:.2f}\tLAST epoch ({:d}):acc: {:.2f}\tpre: '
-            #           '{:.2f}\trec: {:.2f})').format(
-            #     split_idx, tm['best_epoch'], tm['best_acc'], tm['best_pre'],
-            #     tm['best_rec'], tm['last_epoch'], tm['last_acc'],
-            #     tm['last_pre'], tm['last_rec'])
-            # print(report)
-
-        tm_all = np.asarray(tm_all)
-        best_epoch = np.asarray([d['best_epoch'] for d in tm_all])
-        best_acc = np.asarray([d['best_acc'] for d in tm_all])
-        best_pre = np.asarray([d['best_pre'] for d in tm_all])
-        best_rec = np.asarray([d['best_rec'] for d in tm_all])
-        last_epoch = np.asarray([d['last_epoch'] for d in tm_all])
-        last_acc = np.asarray([d['last_acc'] for d in tm_all])
-        last_pre = np.asarray([d['last_pre'] for d in tm_all])
-        last_rec = np.asarray([d['last_rec'] for d in tm_all])
-        report = ('BEST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) average: acc {:.2f}\t'
-                  'pre {:.2f}\trec {:.2f}')
-        report_tuple = tuple(best_epoch) + (best_acc.mean(), best_pre.mean(),
-                                            best_rec.mean())
-        report = report.format(*report_tuple)
-        print(report)
-        report = ('LAST (epochs {:d}/{:d}/{:d}/{:d}/{:d}) average: acc {:.2f}\t'
-                  'pre {:.2f}\trec {:.2f}')
-        report_tuple = tuple(last_epoch) + (last_acc.mean(), last_pre.mean(),
-                                            last_rec.mean())
-        report = report.format(*report_tuple)
-        print(report)
 
     return df
 
