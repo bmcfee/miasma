@@ -68,7 +68,7 @@ def training_report(model_folder, split_indices):
     sns_palette = sns.color_palette()
 
     # Accuracy plots
-    print('Training accuracy:')
+    print('\nTraining accuracy:')
     fig, axs = plt.subplots(1, 4, figsize=(16, 4))
     for npool, pool_layer in enumerate(['softmax', 'max', 'mean', 'none']):
         ax = axs[npool]
@@ -101,9 +101,9 @@ def training_report(model_folder, split_indices):
             epochs = np.arange(len(curve))
             label = 'validation' if n == 0 else None
             ax.plot(epochs, curve, ':', color=sns_palette[n], label=label)
-            ax.plot(np.argmin(curve), curve[np.argmax(curve)], 'ko')
+            ax.plot(np.argmin(curve), curve[np.argmin(curve)], 'ko')
         ax.set_title('{:s}'.format(pool_layer))
-        ax.set_ylabel('accuracy')
+        ax.set_ylabel('loss')
         ax.set_xlabel('epoch')
         ax.legend()
     plt.tight_layout()
