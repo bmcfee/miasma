@@ -229,7 +229,7 @@ def eval_exp(expid):
             hscorefile = os.path.join(
                 smp_folder, 'history_scores{:d}.json'.format(split_idx))
             tm = training_metrics(hscorefile)
-            tm_allsplits.append(tm)
+            tm_all.append(tm)
 
             # report = ('split{:d}: BEST epoch ({:d}): acc: {:.2f}\tpre: {:.2f}\t'
             #           'rec: {:.2f}\tLAST epoch ({:d}):acc: {:.2f}\tpre: '
