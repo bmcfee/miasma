@@ -12,6 +12,10 @@ import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 import gzip
 import argparse
+import keras
+import theano
+import pescador
+import numpy as np
 
 
 def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
@@ -172,6 +176,12 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
 
 
 def run_prediction(expid):
+
+    # Print out library versions
+    print('keras version: {:s}'.format(keras.__version__))
+    print('theano version: {:s}'.format(theano.__version__))
+    print('pescador version: {:s}'.format(pescador.__version__))
+    print('numpy version: {:s}'.format(np.__version__))
 
     for pool_layer in ['softmax', 'max', 'mean']:
         print('\n------------- MODEL: {:s}-pooling -------------'.format(

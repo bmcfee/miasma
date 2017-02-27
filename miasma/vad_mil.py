@@ -23,8 +23,9 @@ import gzip
 import sys
 import argparse
 
+
 np.random.seed(1337)  # for reproducibility
-sys.setrecursionlimit(50000) # to pickle keras history objects
+sys.setrecursionlimit(50000)  # to pickle keras history objects
 
 
 def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
@@ -158,6 +159,12 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    split_indices=[2, 3, 4, 5, 6],
                    pool_layers=['max', 'mean', 'softmax'],
                    temp_conv=False):
+
+    # Print out library versions
+    print('keras version: {:s}'.format(keras.__version__))
+    print('theano version: {:s}'.format(theano.__version__))
+    print('pescador version: {:s}'.format(pescador.__version__))
+    print('numpy version: {:s}'.format(np.__version__))
 
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
