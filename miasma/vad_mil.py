@@ -116,7 +116,7 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
 def fit_model(model, checkpoint_file, train_generator, X_val, Y_val,
               samples_per_epoch=1024, nb_epochs=50, verbose=1):
 
-    checkpointer = ModelCheckpoint(filepath=checkpoint_file, verbose=1,
+    checkpointer = ModelCheckpoint(filepath=checkpoint_file, verbose=0,
                                    save_best_only=True)
 
     history = model.fit_generator(train_generator,
