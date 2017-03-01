@@ -260,7 +260,7 @@ def vad_minibatch_generator(root_folder, track_list,
 
     # DEBUG
     print("Data generator found {:d} files".format(len(cqt_files)))
-    #     print("Creating streams...")
+    print(cqt_files)
 
     # Turn all files into streams
     streams = []
