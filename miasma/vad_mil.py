@@ -4,9 +4,8 @@ import numpy as np
 import os
 import json
 from miasma.miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
-from miasma.miasma.data_generators import get_vad_data, get_vad_data_generators
+from miasma.miasma.data_generators import get_vad_data
 from miasma.miasma.frame_data_generators import get_vad_data_frames
-from miasma.miasma.frame_data_generators import get_vad_data_generators_frames
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
@@ -42,7 +41,7 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
         input_shape = (tf_rows, tf_cols, 1)
     print('Input shape: {:s}'.format(str(input_shape)))
 
-    # MODEL ARCHITECTURE #
+    # MODEL ARCHITECTURE
     inputs = Input(shape=input_shape, name='input')
 
     assert len(nb_filters) == len(kernel_sizes)
@@ -169,8 +168,6 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
     splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
-    # split_indices = [2, 3, 4, 5, 6]
-    # split_indices = [2]
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
@@ -265,21 +262,6 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                         val_id=True,
                         test_id=True))
 
-                # train_generator, validate_generator, test_generator = (
-                #     get_vad_data_generators_frames(
-                #         splitfile=splitfile,
-                #         split_index=split_idx,
-                #         root_folder=root_folder,
-                #         augmentations=['original'],
-                #         feature='cqt44100_1024_8_36',
-                #         activation='vocal_activation44100_1024',
-                #         n_bag_frames=n_bag_frames,
-                #         act_threshold=act_threshold,
-                #         n_hop_frames=n_hop_frames,
-                #         batch_size=batch_size,
-                #         n_samples=n_samples,
-                #         n_active=n_active))
-
             else:
                 (train_generator, X_val, Y_val, ID_val,
                  X_test, Y_test, ID_test) = (
@@ -301,22 +283,6 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                         val_id=True,
                         test_id=True))
 
-                # train_generator, validate_generator, test_generator = (
-                #     get_vad_data_generators(
-                #         splitfile=splitfile,
-                #         split_index=split_idx,
-                #         root_folder=root_folder,
-                #         augmentations=['original'],
-                #         feature='cqt44100_1024_8_36',
-                #         activation='vocal_activation44100_1024',
-                #         n_bag_frames=n_bag_frames,
-                #         min_active_frames=min_active_frames,
-                #         act_threshold=act_threshold,
-                #         n_hop_frames=n_hop_frames,
-                #         batch_size=batch_size,
-                #         n_samples=n_samples,
-                #         n_active=n_active))
-
             checkpoint_file = os.path.join(
                 smp_folder, 'weights_best{:d}.hdf5'.format(split_idx))
 
@@ -324,20 +290,6 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             history = fit_model(model, checkpoint_file, train_generator, X_val,
                                 Y_val, samples_per_epoch=samples_per_epoch,
                                 nb_epochs=nb_epochs, verbose=verbose)
-
-            # history = fit_model_valgenerator(
-            #     model, checkpoint_file, train_generator, validate_generator,
-            #     samples_per_epoch=samples_per_epoch, nb_epochs=nb_epochs,
-            #     verbose=verbose, nb_val_samples=32)
-
-            # # Test
-            # X_test = []
-            # Y_test = []
-            # for batch in test_generator:
-            #     X_test.extend(batch[0])
-            #     Y_test.extend(batch[1])
-            # X_test = np.asarray(X_test)
-            # Y_test = np.asarray(Y_test)
 
             pred = model.predict(X_test)
 
@@ -411,11 +363,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # # debug
-    # for arg in vars(args):
-    #     print('{:s}\ttype={:s}\t{:s}'.format(
-    #         arg, str(type(getattr(args, arg))), str(getattr(args, arg))))
-
     # Convert kernel_sizes into list of tuple
     ind = 0
     kernel_sizes = []
@@ -425,11 +372,6 @@ if __name__ == '__main__':
         ind += 2
 
     temp_conv = bool(args.temp_conv)
-
-    # # debug
-    # print('{:s}\ttype={:s}\t{:s}'.format('kernel_sizes',
-    #                                      str(type(kernel_sizes)),
-    #                                      str(kernel_sizes)))
 
     run_experiment(args.expid,
                    n_bag_frames=args.n_bag_frames,
