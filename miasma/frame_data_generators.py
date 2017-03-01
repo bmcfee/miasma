@@ -85,6 +85,8 @@ def vad_minibatch_generator_frames(
             for cqtf in files:
                 cqt_files.append(cqtf)
 
+    print("Data generator found {:d} files".format(len(cqt_files)))
+
     # Turn all files into streams
     streams = []
     for cqtfile in cqt_files:

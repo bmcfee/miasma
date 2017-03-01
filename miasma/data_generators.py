@@ -259,7 +259,7 @@ def vad_minibatch_generator(root_folder, track_list,
                 cqt_files.append(cqtf)
 
     # DEBUG
-    #     print("Found {:d} files".format(len(cqt_files)))
+    print("Data generator found {:d} files".format(len(cqt_files)))
     #     print("Creating streams...")
 
     # Turn all files into streams
