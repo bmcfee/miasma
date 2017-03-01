@@ -5,6 +5,7 @@ import gzip
 import os
 import pescador
 import glob
+import time
 
 
 def _bag_activation(activation, min_active_frames, act_threshold=0.5):
@@ -259,8 +260,9 @@ def vad_minibatch_generator(root_folder, track_list,
                 cqt_files.append(cqtf)
 
     # DEBUG
+    # raise ValueError('found {:d} files'.format(len(cqt_files)))
     print("Data generator found {:d} files".format(len(cqt_files)))
-    print(cqt_files)
+    # print(cqt_files)
 
     # Turn all files into streams
     streams = []
@@ -372,7 +374,8 @@ def get_vad_data_generators(
     track_list = split[split_index][0]
     shuffle = True
     with_replacement = True
-
+    
+    # print('train generator:')
     train_generator = keras_vad_minibatch_generator(
         root_folder, track_list, augmentations, feature, activation,
         n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
@@ -385,6 +388,7 @@ def get_vad_data_generators(
     with_replacement = False
     val_batch_size = batch_size
 
+    # print('validate generator:')
     validate_generator = keras_vad_minibatch_generator(
         root_folder, track_list, ['original'], feature, activation,
         n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
@@ -392,6 +396,7 @@ def get_vad_data_generators(
         with_id=val_id)
 
     # TEST GENERATOR
+    # print('test generator:')
     track_list = split[split_index][2]
     shuffle = False
     with_replacement = False
