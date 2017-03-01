@@ -81,7 +81,8 @@ def vad_minibatch_generator_frames(
             # cqtfile = os.path.join(cqt_folder, '{:s}_cqt.npy.gz'.format(track))
             files = (
                 glob.glob(
-                    os.path.join(cqt_folder, '{:s}*_cqt.npy.gz'.format(track))))
+                    os.path.join(cqt_folder, '{:s}_*_cqt.npy.gz'.format(
+                        track))))
             for cqtf in files:
                 cqt_files.append(cqtf)
 
