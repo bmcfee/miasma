@@ -255,7 +255,7 @@ def vad_minibatch_generator(root_folder, track_list,
             # cqtfile = os.path.join(cqt_folder, '{:s}_cqt.npy.gz'.format(track))
             files = (
                 glob.glob(os.path.join(
-                    cqt_folder, '{:s}*_cqt.npy.gz'.format(track))))
+                    cqt_folder, '{:s}_*_cqt.npy.gz'.format(track))))
             for cqtf in files:
                 cqt_files.append(cqtf)
 
