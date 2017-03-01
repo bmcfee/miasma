@@ -157,7 +157,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    metrics=['accuracy', 'precision', 'recall'],
                    split_indices=[2, 3, 4, 5, 6],
                    pool_layers=['max', 'mean', 'softmax'],
-                   temp_conv=False):
+                   temp_conv=False, augs=['original']):
 
     # Print out library versions
     print('keras version: {:s}'.format(keras.__version__))
@@ -249,7 +249,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                         splitfile=splitfile,
                         split_index=split_idx,
                         root_folder=root_folder,
-                        augmentations=['original'],
+                        augmentations=augs,
                         feature='cqt44100_1024_8_36',
                         activation='vocal_activation44100_1024',
                         n_bag_frames=n_bag_frames,
@@ -269,7 +269,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                         splitfile=splitfile,
                         split_index=split_idx,
                         root_folder=root_folder,
-                        augmentations=['original'],
+                        augmentations=augs,
                         feature='cqt44100_1024_8_36',
                         activation='vocal_activation44100_1024',
                         n_bag_frames=n_bag_frames,
@@ -341,7 +341,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_hop_frames', type=int, default=22)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_samples', type=int, default=None)
-    parser.add_argument('--n_active', type=int, default=1000)
+    parser.add_argument('--n_active', type=int, default=10000)
     parser.add_argument('--samples_per_epoch', type=int, default=1024)
     parser.add_argument('--nb_epochs', type=int, default=50)
     parser.add_argument('--verbose', type=int, default=1)
@@ -360,6 +360,7 @@ if __name__ == '__main__':
     parser.add_argument('--pool_layers', type=str, nargs='+',
                         default=['max', 'mean', 'softmax'])
     parser.add_argument('--temp_conv', type=int, default=0)
+    parser.add_argument('--augs', type=str, nargs='+', default=['original'])
 
     args = parser.parse_args()
 
@@ -393,5 +394,6 @@ if __name__ == '__main__':
                    metrics=args.metrics,
                    split_indices=args.split_indices,
                    pool_layers=args.pool_layers,
-                   temp_conv=temp_conv)
+                   temp_conv=temp_conv,
+                   augs=args.augs)
 

@@ -4,6 +4,7 @@ import numpy as np
 import gzip
 import os
 import pescador
+import glob
 
 
 def _bag_activation(activation, min_active_frames, act_threshold=0.5):
@@ -250,8 +251,12 @@ def vad_minibatch_generator(root_folder, track_list,
     for track in track_list:
         for aug in augmentations:
             cqt_folder = os.path.join(root_folder, aug, 'features', feature)
-            cqtfile = os.path.join(cqt_folder, '{:s}_cqt.npy.gz'.format(track))
-            cqt_files.append(cqtfile)
+            # cqtfile = os.path.join(cqt_folder, '{:s}_cqt.npy.gz'.format(track))
+            files = (
+                glob.glob(os.path.join(
+                    cqt_folder, '{:s}*_cqt.npy.gz'.format(track))))
+            for cqtf in files:
+                cqt_files.append(cqtf)
 
     # DEBUG
     #     print("Found {:d} files".format(len(cqt_files)))
@@ -381,7 +386,7 @@ def get_vad_data_generators(
     val_batch_size = batch_size
 
     validate_generator = keras_vad_minibatch_generator(
-        root_folder, track_list, augmentations, feature, activation,
+        root_folder, track_list, ['original'], feature, activation,
         n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
         shuffle, val_batch_size, n_samples, n_active, with_replacement,
         with_id=val_id)
@@ -393,7 +398,7 @@ def get_vad_data_generators(
     test_batch_size = batch_size
 
     test_generator = keras_vad_minibatch_generator(
-        root_folder, track_list, augmentations, feature, activation,
+        root_folder, track_list, ['original'], feature, activation,
         n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
         shuffle, test_batch_size, n_samples, n_active, with_replacement,
         with_id=test_id)

@@ -5,6 +5,7 @@ import gzip
 import os
 from miasma.miasma.data_generators import batch_mux
 import pescador
+import glob
 
 
 def _generate_bag_frames(trackid, cqt, act, frame, n_bag_frames,
@@ -77,8 +78,12 @@ def vad_minibatch_generator_frames(
     for track in track_list:
         for aug in augmentations:
             cqt_folder = os.path.join(root_folder, aug, 'features', feature)
-            cqtfile = os.path.join(cqt_folder, '{:s}_cqt.npy.gz'.format(track))
-            cqt_files.append(cqtfile)
+            # cqtfile = os.path.join(cqt_folder, '{:s}_cqt.npy.gz'.format(track))
+            files = (
+                glob.glob(
+                    os.path.join(cqt_folder, '{:s}*_cqt.npy.gz'.format(track))))
+            for cqtf in files:
+                cqt_files.append(cqtf)
 
     # Turn all files into streams
     streams = []
@@ -177,7 +182,7 @@ def get_vad_data_generators_frames(
     val_batch_size = batch_size
 
     validate_generator = keras_vad_minibatch_generator_frames(
-        root_folder, track_list, augmentations, feature, activation,
+        root_folder, track_list, ['original'], feature, activation,
         n_bag_frames, act_threshold, n_hop_frames,
         shuffle, val_batch_size, n_samples, n_active, with_replacement,
         with_id=val_id)
@@ -189,7 +194,7 @@ def get_vad_data_generators_frames(
     test_batch_size = batch_size
 
     test_generator = keras_vad_minibatch_generator_frames(
-        root_folder, track_list, augmentations, feature, activation,
+        root_folder, track_list, ['original'], feature, activation,
         n_bag_frames, act_threshold, n_hop_frames,
         shuffle, test_batch_size, n_samples, n_active, with_replacement,
         with_id=test_id)
