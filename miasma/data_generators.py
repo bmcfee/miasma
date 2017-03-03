@@ -82,9 +82,10 @@ def _generate_bag(trackid, cqt, act, frame, n_bag_frames, min_active_frames,
 
 
 def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
-                      n_hop_frames, act_threshold=0.5, shuffle=True):
+                      n_hop_frames, act_threshold=0.5, shuffle=True,
+                      infinite=False):
     '''
-    Returns a finite MIL bag generator.
+    Returns a in/finite MIL bag generator.
 
     The generator yields a dictionary with three elements:
     X = features, Y = label, Z = bag ID (trackid + first frame index).
@@ -100,10 +101,14 @@ def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
     min_active_frames: int
         Minimum number of consecutive active frames to consider bag positive
     n_hop_frames : int
-        Number of frames to jump between consecutive bags
+        Number of frames to jump between consecutive bags. Ignored if
+        (infinite=True and shuffle=True).
     shuffle : bool
-        Whether to shuffle the ordering of the bags (for sgd) or not (for
-        validation and test)
+        Whether to shuffle the ordering of the bags (for training) or not (for
+        validation and test).
+    infinite : bool
+        If True, generates infinitely many samples. If False, generates
+        samples until frames are exhausted.
 
     Returns
     -------
@@ -116,65 +121,30 @@ def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
     # Get bag ID (from filename)
     trackid = '_'.join(os.path.basename(cqtfile).split('_')[:2])
 
-    # librosa puts time in dim 1
-    order = np.arange(0, cqt.shape[1]-n_bag_frames, n_hop_frames)
-    if shuffle:
-        np.random.shuffle(order)
+    if infinite:
+        frame = -1
+        while True:
+            if shuffle:
+                frame = np.random.randint(0, cqt.shape[1] - n_bag_frames)
+            else:
+                frame = np.mod(frame + n_hop_frames,
+                               cqt.shape[1] - n_bag_frames)
 
-    for frame in order:
-        yield _generate_bag(trackid, cqt, act, frame, n_bag_frames,
-                            min_active_frames, act_threshold=act_threshold)
-
-
-def infinite_mil_bag_generator(cqtfile, actfile, n_bag_frames,
-                               min_active_frames, n_hop_frames,
-                               act_threshold=0.5, shuffle=True):
-    '''
-    Return an inifinite MIL bag generator
-
-    The generator  yields a dictionary with three elements:
-    X = features, Y = label, Z = bag ID (trackid + first frame index).
-
-    Parameters
-    ----------
-    cqtfile : str
-        Path to .npy.gz file containing the log-CQT matrix
-    actfile : str
-        Path to .npy.gz file containing the activation vector
-    n_bag_frames : int
-        Number of frames to include in a bag
-    min_active_frames: int
-        Minimum number of consecutive active frames to consider bag positive
-    n_hop_frames : int
-        Number of frames to jump between consecutive bags
-    shuffle : bool
-        Whether to shuffle the ordering of the bags (for sgd) or not (for
-        validation and test)
-
-    Returns
-    -------
-
-    '''
-    # Load cqt file and ativation file
-    cqt = np.load(gzip.open(cqtfile, 'rb'))
-    act = np.load(gzip.open(actfile, 'rb'))
-
-    # Get bag ID (from filename)
-    trackid = '_'.join(os.path.basename(cqtfile).split('_')[:2])
-
-    frame = -1
-    while True:
+            yield _generate_bag(trackid, cqt, act, frame, n_bag_frames,
+                                min_active_frames, act_threshold=act_threshold)
+    else:
+        # librosa puts time in dim 1
+        order = np.arange(0, cqt.shape[1]-n_bag_frames, n_hop_frames)
         if shuffle:
-            frame = np.random.randint(0, cqt.shape[1] - n_bag_frames)
-        else:
-            frame = np.mod(frame + n_hop_frames, cqt.shape[1] - n_bag_frames)
+            np.random.shuffle(order)
 
-        yield _generate_bag(trackid, cqt, act, frame, n_bag_frames,
-                            min_active_frames, act_threshold=act_threshold)
+        for frame in order:
+            yield _generate_bag(trackid, cqt, act, frame, n_bag_frames,
+                                min_active_frames, act_threshold=act_threshold)
 
 
 def batch_mux(streams, batch_size, n_samples=None, n_active=1000,
-              with_replacement=False):
+              with_replacement=False, revive=False, lam=32.0):
     '''
     Multiplex streams into batches of size n_batch
 
@@ -202,7 +172,7 @@ def batch_mux(streams, batch_size, n_samples=None, n_active=1000,
 
     stream_mux = pescador.Streamer(
         pescador.mux, streams, n_samples, n_active,
-        with_replacement=with_replacement, lam=None)
+        with_replacement=with_replacement, revive=revive, lam=lam)
 
     batch_streamer = pescador.Streamer(
         pescador.buffer_streamer, stream_mux, batch_size)
@@ -222,7 +192,10 @@ def vad_minibatch_generator(root_folder, track_list,
                             batch_size=100,
                             n_samples=None,
                             n_active=1000,
-                            with_replacement=False):
+                            with_replacement=False,
+                            revive=False,
+                            infinite=False,
+                            lam=32.0):
     '''
     Returns a minibatch generator for VAD (yields in pescador format).
 
@@ -275,25 +248,23 @@ def vad_minibatch_generator(root_folder, track_list,
                 '_cqt.npy.gz', '_vocalactivation.npy.gz'))
         assert os.path.isfile(actfile)
 
-        if with_replacement:
-            streams.append(pescador.Streamer(infinite_mil_bag_generator,
-                                             cqtfile, actfile, n_bag_frames,
-                                             min_active_frames,
-                                             n_hop_frames, act_threshold,
-                                             shuffle))
-        else:
-            streams.append(
-                pescador.Streamer(mil_bag_generator, cqtfile, actfile,
-                                  n_bag_frames, min_active_frames, n_hop_frames,
-                                  act_threshold, shuffle))
+        streams.append(
+            pescador.Streamer(mil_bag_generator, cqtfile, actfile,
+                              n_bag_frames, min_active_frames, n_hop_frames,
+                              act_threshold=act_threshold,
+                              shuffle=shuffle,
+                              infinite=infinite))
 
     # DEBUG
     #     print("Done")
 
     # Mux the streams into minimbatches
-    batch_streamer = batch_mux(streams, batch_size, n_samples=n_samples,
+    batch_streamer = batch_mux(streams, batch_size,
+                               n_samples=n_samples,
                                n_active=n_active,
-                               with_replacement=with_replacement)
+                               with_replacement=with_replacement,
+                               revive=revive,
+                               lam=lam)
 
     return batch_streamer
 
@@ -311,6 +282,9 @@ def keras_vad_minibatch_generator(root_folder, track_list,
                                   n_samples=None,
                                   n_active=1000,
                                   with_replacement=False,
+                                  revive=False,
+                                  infinite=False,
+                                  lam=32.0,
                                   with_id=False):
     '''
     Returns a minibatch generator for VAD (yields in keras format).
@@ -337,9 +311,13 @@ def keras_vad_minibatch_generator(root_folder, track_list,
 
     '''
     keras_generator = vad_minibatch_generator(
-        root_folder, track_list, augmentations, feature, activation,
-        n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
-        shuffle, batch_size, n_samples, n_active, with_replacement)
+        root_folder, track_list,
+        augmentations=augmentations, feature=feature, activation=activation,
+        n_bag_frames=n_bag_frames, min_active_frames=min_active_frames,
+        act_threshold=act_threshold, n_hop_frames=n_hop_frames,
+        shuffle=shuffle, batch_size=batch_size, n_samples=n_samples,
+        n_active=n_active, with_replacement=with_replacement, revive=revive,
+        infinite=infinite, lam=lam)
 
     if with_id:
         for batch in keras_generator.generate():
@@ -362,7 +340,7 @@ def get_vad_data_generators(
         n_hop_frames=22,
         batch_size=32,
         n_samples=None,
-        n_active=1000,
+        n_active=128,
         train_id=False,
         val_id=True,
         test_id=True):
@@ -372,41 +350,61 @@ def get_vad_data_generators(
 
     # TRAIN GENERATOR
     track_list = split[split_index][0]
+    with_replacement = False
     shuffle = True
-    with_replacement = True
+    revive = True
+    infinite = True
+    lam = 32.0
     
     # print('train generator:')
     train_generator = keras_vad_minibatch_generator(
-        root_folder, track_list, augmentations, feature, activation,
-        n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
-        shuffle, batch_size, n_samples, n_active, with_replacement,
-        with_id=train_id)
+        root_folder, track_list, augmentations=augmentations, feature=feature,
+        activation=activation, n_bag_frames=n_bag_frames,
+        min_active_frames=min_active_frames, act_threshold=act_threshold,
+        n_hop_frames=n_hop_frames, shuffle=shuffle, batch_size=batch_size,
+        n_samples=n_samples, n_active=n_active,
+        with_replacement=with_replacement, revive=revive, infinite=infinite,
+        lam=lam, with_id=train_id)
 
     # VALIDATE GENERATOR
     track_list = split[split_index][1]
-    shuffle = False
     with_replacement = False
+    shuffle = False
+    revive = False
+    infinite = False
+    lam = None
+    val_n_active = 1
     val_batch_size = batch_size
 
     # print('validate generator:')
     validate_generator = keras_vad_minibatch_generator(
-        root_folder, track_list, ['original'], feature, activation,
-        n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
-        shuffle, val_batch_size, n_samples, n_active, with_replacement,
-        with_id=val_id)
+        root_folder, track_list, augmentations=['original'], feature=feature,
+        activation=activation, n_bag_frames=n_bag_frames,
+        min_active_frames=min_active_frames, act_threshold=act_threshold,
+        n_hop_frames=n_hop_frames, shuffle=shuffle, batch_size=val_batch_size,
+        n_samples=n_samples, n_active=val_n_active,
+        with_replacement=with_replacement, revive=revive, infinite=infinite,
+        lam=lam, with_id=val_id)
 
     # TEST GENERATOR
     # print('test generator:')
     track_list = split[split_index][2]
-    shuffle = False
     with_replacement = False
+    shuffle = False
+    revive = False
+    infinite = False
+    lam = None
+    test_n_active = 1
     test_batch_size = batch_size
 
     test_generator = keras_vad_minibatch_generator(
-        root_folder, track_list, ['original'], feature, activation,
-        n_bag_frames, min_active_frames, act_threshold, n_hop_frames,
-        shuffle, test_batch_size, n_samples, n_active, with_replacement,
-        with_id=test_id)
+        root_folder, track_list, augmentations=['original'], feature=feature,
+        activation=activation, n_bag_frames=n_bag_frames,
+        min_active_frames=min_active_frames, act_threshold=act_threshold,
+        n_hop_frames=n_hop_frames, shuffle=shuffle, batch_size=test_batch_size,
+        n_samples=n_samples, n_active=test_n_active,
+        with_replacement=with_replacement, revive=revive, infinite=infinite,
+        lam=lam, with_id=test_id)
 
     return train_generator, validate_generator, test_generator
 
