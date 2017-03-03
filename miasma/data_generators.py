@@ -448,7 +448,7 @@ def get_vad_data(
         n_hop_frames=22,
         batch_size=32,
         n_samples=None,
-        n_active=1000,
+        n_active=128,
         train_id=False,
         val_id=True,
         test_id=True,
