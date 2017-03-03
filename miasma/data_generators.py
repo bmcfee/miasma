@@ -81,9 +81,26 @@ def _generate_bag(trackid, cqt, act, frame, n_bag_frames, min_active_frames,
         ID=np.asarray([bagid]))
 
 
+def _generate_bag_frames(trackid, cqt, act, frame, n_bag_frames,
+                         min_active_frames, act_threshold=0.5):
+
+    # Compute bag label
+    patch_act = act[frame:frame+n_bag_frames]
+
+    # Compute bag ID
+    bagid = '{:s}_{:d}'.format(trackid, frame)
+
+    return dict(
+        X=(cqt[:, frame:frame+n_bag_frames]).reshape(
+            -1, cqt.shape[0], n_bag_frames, 1),
+        Y=(1 * (patch_act >= act_threshold)).reshape(1, -1),
+        ACT=patch_act.reshape(1, -1),
+        ID=np.asarray([bagid]))
+
+
 def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
                       n_hop_frames, act_threshold=0.5, shuffle=True,
-                      infinite=False):
+                      infinite=False, frame_level=False):
     '''
     Returns a in/finite MIL bag generator.
 
@@ -121,6 +138,11 @@ def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
     # Get bag ID (from filename)
     trackid = '_'.join(os.path.basename(cqtfile).split('_')[:2])
 
+    if frame_level:
+        gen_func = _generate_bag_frames
+    else:
+        gen_func = _generate_bag
+
     if infinite:
         frame = -1
         while True:
@@ -130,8 +152,8 @@ def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
                 frame = np.mod(frame + n_hop_frames,
                                cqt.shape[1] - n_bag_frames)
 
-            yield _generate_bag(trackid, cqt, act, frame, n_bag_frames,
-                                min_active_frames, act_threshold=act_threshold)
+            yield gen_func(trackid, cqt, act, frame, n_bag_frames,
+                           min_active_frames, act_threshold=act_threshold)
     else:
         # librosa puts time in dim 1
         order = np.arange(0, cqt.shape[1]-n_bag_frames, n_hop_frames)
@@ -139,8 +161,8 @@ def mil_bag_generator(cqtfile, actfile, n_bag_frames, min_active_frames,
             np.random.shuffle(order)
 
         for frame in order:
-            yield _generate_bag(trackid, cqt, act, frame, n_bag_frames,
-                                min_active_frames, act_threshold=act_threshold)
+            yield gen_func(trackid, cqt, act, frame, n_bag_frames,
+                           min_active_frames, act_threshold=act_threshold)
 
 
 def batch_mux(streams, batch_size, n_samples=None, n_active=1000,
@@ -195,7 +217,8 @@ def vad_minibatch_generator(root_folder, track_list,
                             with_replacement=False,
                             revive=False,
                             infinite=False,
-                            lam=32.0):
+                            lam=32.0,
+                            frame_level=False):
     '''
     Returns a minibatch generator for VAD (yields in pescador format).
 
@@ -253,7 +276,8 @@ def vad_minibatch_generator(root_folder, track_list,
                               n_bag_frames, min_active_frames, n_hop_frames,
                               act_threshold=act_threshold,
                               shuffle=shuffle,
-                              infinite=infinite))
+                              infinite=infinite,
+                              frame_level=frame_level))
 
     # DEBUG
     #     print("Done")
@@ -285,7 +309,8 @@ def keras_vad_minibatch_generator(root_folder, track_list,
                                   revive=False,
                                   infinite=False,
                                   lam=32.0,
-                                  with_id=False):
+                                  with_id=False,
+                                  frame_level=False):
     '''
     Returns a minibatch generator for VAD (yields in keras format).
 
@@ -317,7 +342,7 @@ def keras_vad_minibatch_generator(root_folder, track_list,
         act_threshold=act_threshold, n_hop_frames=n_hop_frames,
         shuffle=shuffle, batch_size=batch_size, n_samples=n_samples,
         n_active=n_active, with_replacement=with_replacement, revive=revive,
-        infinite=infinite, lam=lam)
+        infinite=infinite, lam=lam, frame_level=frame_level)
 
     if with_id:
         for batch in keras_generator.generate():
@@ -343,7 +368,8 @@ def get_vad_data_generators(
         n_active=128,
         train_id=False,
         val_id=True,
-        test_id=True):
+        test_id=True,
+        frame_level=False):
 
     # Load data split
     split = np.load(splitfile)
@@ -364,7 +390,7 @@ def get_vad_data_generators(
         n_hop_frames=n_hop_frames, shuffle=shuffle, batch_size=batch_size,
         n_samples=n_samples, n_active=n_active,
         with_replacement=with_replacement, revive=revive, infinite=infinite,
-        lam=lam, with_id=train_id)
+        lam=lam, with_id=train_id, frame_level=frame_level)
 
     # VALIDATE GENERATOR
     track_list = split[split_index][1]
@@ -384,7 +410,7 @@ def get_vad_data_generators(
         n_hop_frames=n_hop_frames, shuffle=shuffle, batch_size=val_batch_size,
         n_samples=n_samples, n_active=val_n_active,
         with_replacement=with_replacement, revive=revive, infinite=infinite,
-        lam=lam, with_id=val_id)
+        lam=lam, with_id=val_id, frame_level=frame_level)
 
     # TEST GENERATOR
     # print('test generator:')
@@ -404,7 +430,7 @@ def get_vad_data_generators(
         n_hop_frames=n_hop_frames, shuffle=shuffle, batch_size=test_batch_size,
         n_samples=n_samples, n_active=test_n_active,
         with_replacement=with_replacement, revive=revive, infinite=infinite,
-        lam=lam, with_id=test_id)
+        lam=lam, with_id=test_id, frame_level=frame_level)
 
     return train_generator, validate_generator, test_generator
 
@@ -425,7 +451,8 @@ def get_vad_data(
         n_active=1000,
         train_id=False,
         val_id=True,
-        test_id=True):
+        test_id=True,
+        frame_level=False):
 
     train_generator, validate_generator, test_generator = (
         get_vad_data_generators(
@@ -444,7 +471,8 @@ def get_vad_data(
             n_active=n_active,
             train_id=train_id,
             val_id=val_id,
-            test_id=test_id))
+            test_id=test_id,
+            frame_level=frame_level))
 
     # Get full validation & test data
     X_val = []
@@ -464,8 +492,8 @@ def get_vad_data(
     print('Validation set:')
     print(X_val.shape)
     print(Y_val.shape)
-    print('0: {:d}'.format(np.sum(Y_val == 0)))
-    print('1: {:d}'.format(np.sum(Y_val == 1)))
+    print('0: {:d}'.format(np.sum(1 * (Y_val.reshape(-1) == 0))))
+    print('1: {:d}'.format(np.sum(1 * (Y_val.reshape(-1) == 1))))
     print(' ')
 
     X_test = []
