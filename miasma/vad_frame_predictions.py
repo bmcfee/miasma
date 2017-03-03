@@ -4,7 +4,8 @@ from keras import backend as K
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Convolution2D, Convolution1D
 from miasma.miasma.layers import SqueezeLayer
-from miasma.miasma.frame_data_generators import get_vad_data_frames
+# from miasma.miasma.frame_data_generators import get_vad_data_frames
+from miasma.miasma.data_generators import get_vad_data
 from keras.layers import Input
 from keras.models import Model
 import os
@@ -128,9 +129,30 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
 
     # Load validation / test data
     splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
+    # (train_generator, X_val, Y_val, ID_val,
+    #  X_test, Y_test, ID_test) = (
+    #     get_vad_data_frames(
+    #         splitfile=splitfile,
+    #         split_index=split_idx,
+    #         root_folder=root_folder,
+    #         augmentations=['original'],
+    #         feature='cqt44100_1024_8_36',
+    #         activation='vocal_activation44100_1024',
+    #         n_bag_frames=metadata['n_bag_frames'],
+    #         act_threshold=metadata['act_threshold'],
+    #         n_hop_frames=metadata['n_hop_frames'],
+    #         batch_size=metadata['batch_size'],
+    #         n_samples=metadata['n_samples'],
+    #         n_active=metadata['n_active'],
+    #         train_id=False,
+    #         val_id=True,
+    #         test_id=True))
+
+    # Use new generator
+    # New code
     (train_generator, X_val, Y_val, ID_val,
      X_test, Y_test, ID_test) = (
-        get_vad_data_frames(
+        get_vad_data(
             splitfile=splitfile,
             split_index=split_idx,
             root_folder=root_folder,
@@ -138,14 +160,16 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
             feature='cqt44100_1024_8_36',
             activation='vocal_activation44100_1024',
             n_bag_frames=metadata['n_bag_frames'],
+            min_active_frames=metadata['min_active_frames'],
             act_threshold=metadata['act_threshold'],
             n_hop_frames=metadata['n_hop_frames'],
             batch_size=metadata['batch_size'],
-            n_samples=metadata['n_samples'],
+            n_samples=None,
             n_active=metadata['n_active'],
             train_id=False,
             val_id=True,
-            test_id=True))
+            test_id=True,
+            frame_level=True))
 
     # Get frame-level predictions
     pred = model.predict(X_test)
