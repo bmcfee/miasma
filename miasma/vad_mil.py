@@ -5,7 +5,7 @@ import os
 import json
 from miasma.miasma.layers import SoftMaxPool, SqueezeLayer, BagToBatchLayer
 from miasma.miasma.data_generators import get_vad_data
-from miasma.miasma.frame_data_generators import get_vad_data_frames
+# from miasma.miasma.frame_data_generators import get_vad_data_frames
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Dropout, Activation, Flatten, Input
@@ -242,46 +242,68 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 min_active_frames=min_active_frames)
 
             # Load data
-            if pool_layer == 'none':
-                (train_generator, X_val, Y_val, ID_val,
-                 X_test, Y_test, ID_test) = (
-                    get_vad_data_frames(
-                        splitfile=splitfile,
-                        split_index=split_idx,
-                        root_folder=root_folder,
-                        augmentations=augs,
-                        feature='cqt44100_1024_8_36',
-                        activation='vocal_activation44100_1024',
-                        n_bag_frames=n_bag_frames,
-                        act_threshold=act_threshold,
-                        n_hop_frames=n_hop_frames,
-                        batch_size=batch_size,
-                        n_samples=n_samples,
-                        n_active=n_active,
-                        train_id=False,
-                        val_id=True,
-                        test_id=True))
+            # if pool_layer == 'none':
+            #     (train_generator, X_val, Y_val, ID_val,
+            #      X_test, Y_test, ID_test) = (
+            #         get_vad_data_frames(
+            #             splitfile=splitfile,
+            #             split_index=split_idx,
+            #             root_folder=root_folder,
+            #             augmentations=augs,
+            #             feature='cqt44100_1024_8_36',
+            #             activation='vocal_activation44100_1024',
+            #             n_bag_frames=n_bag_frames,
+            #             act_threshold=act_threshold,
+            #             n_hop_frames=n_hop_frames,
+            #             batch_size=batch_size,
+            #             n_samples=n_samples,
+            #             n_active=n_active,
+            #             train_id=False,
+            #             val_id=True,
+            #             test_id=True))
+            #
+            # else:
+            #     (train_generator, X_val, Y_val, ID_val,
+            #      X_test, Y_test, ID_test) = (
+            #         get_vad_data(
+            #             splitfile=splitfile,
+            #             split_index=split_idx,
+            #             root_folder=root_folder,
+            #             augmentations=augs,
+            #             feature='cqt44100_1024_8_36',
+            #             activation='vocal_activation44100_1024',
+            #             n_bag_frames=n_bag_frames,
+            #             min_active_frames=min_active_frames,
+            #             act_threshold=act_threshold,
+            #             n_hop_frames=n_hop_frames,
+            #             batch_size=batch_size,
+            #             n_samples=n_samples,
+            #             n_active=n_active,
+            #             train_id=False,
+            #             val_id=True,
+            #             test_id=True))
 
-            else:
-                (train_generator, X_val, Y_val, ID_val,
-                 X_test, Y_test, ID_test) = (
-                    get_vad_data(
-                        splitfile=splitfile,
-                        split_index=split_idx,
-                        root_folder=root_folder,
-                        augmentations=augs,
-                        feature='cqt44100_1024_8_36',
-                        activation='vocal_activation44100_1024',
-                        n_bag_frames=n_bag_frames,
-                        min_active_frames=min_active_frames,
-                        act_threshold=act_threshold,
-                        n_hop_frames=n_hop_frames,
-                        batch_size=batch_size,
-                        n_samples=n_samples,
-                        n_active=n_active,
-                        train_id=False,
-                        val_id=True,
-                        test_id=True))
+            # New code
+            (train_generator, X_val, Y_val, ID_val,
+             X_test, Y_test, ID_test) = (
+                get_vad_data(
+                    splitfile=splitfile,
+                    split_index=split_idx,
+                    root_folder=root_folder,
+                    augmentations=augs,
+                    feature='cqt44100_1024_8_36',
+                    activation='vocal_activation44100_1024',
+                    n_bag_frames=n_bag_frames,
+                    min_active_frames=min_active_frames,
+                    act_threshold=act_threshold,
+                    n_hop_frames=n_hop_frames,
+                    batch_size=batch_size,
+                    n_samples=n_samples,
+                    n_active=n_active,
+                    train_id=False,
+                    val_id=True,
+                    test_id=True,
+                    frame_level=(pool_layer == 'none')))
 
             checkpoint_file = os.path.join(
                 smp_folder, 'weights_best{:d}.hdf5'.format(split_idx))
