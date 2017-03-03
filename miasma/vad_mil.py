@@ -48,7 +48,8 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
 
     if freq_conv:
         b0 = BatchNormalization(name='b0')(inputs)
-        c0 = Convolution2D(1, 3, 1, border_mode='same', activation='relu')(b0)
+        c0 = Convolution2D(1, 3, 1, border_mode='same', activation='relu',
+                           name='c0')(b0)
         b1 = BatchNormalization(name='b1')(c0)
     else:
         b1 = BatchNormalization(name='b1')(inputs)
