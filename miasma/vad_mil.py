@@ -149,7 +149,7 @@ def fit_model_valgenerator(model, checkpoint_file, train_generator,
 
 def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    act_threshold=0.5, n_hop_frames=22, batch_size=32,
-                   n_samples=None, n_active=1000, samples_per_epoch=1024,
+                   n_samples=None, n_active=128, samples_per_epoch=1024,
                    nb_epochs=50, verbose=1,
                    tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                    kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_hop_frames', type=int, default=22)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_samples', type=int, default=None)
-    parser.add_argument('--n_active', type=int, default=10000)
+    parser.add_argument('--n_active', type=int, default=128)
     parser.add_argument('--samples_per_epoch', type=int, default=1024)
     parser.add_argument('--nb_epochs', type=int, default=50)
     parser.add_argument('--verbose', type=int, default=1)
