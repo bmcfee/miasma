@@ -23,7 +23,7 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                       kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                       loss='binary_crossentropy', optimizer='adam',
                       metrics=['accuracy'], print_model_summary=True,
-                      temp_conv=False, min_active_frames=10):
+                      temp_conv=False, freq_conv=False, min_active_frames=10):
     '''
     Build a model that produces frame-level predictions, with no final pool
     layer.
@@ -53,12 +53,18 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
         input_shape = (tf_rows, tf_cols, 1)
     print('Input shape: {:s}'.format(str(input_shape)))
 
+    assert len(nb_filters) == len(kernel_sizes)
+
     # MODEL ARCHITECTURE #
     inputs = Input(shape=input_shape, name='input')
 
-    assert len(nb_filters) == len(kernel_sizes)
+    if freq_conv:
+        b0 = BatchNormalization(name='b0')(inputs)
+        c0 = Convolution2D(1, 3, 1, border_mode='same', activation='relu')(b0)
+        b1 = BatchNormalization(name='b1')(c0)
+    else:
+        b1 = BatchNormalization(name='b1')(inputs)
 
-    b1 = BatchNormalization(name='b1')(inputs)
     c1 = Convolution2D(nb_filters[0], kernel_sizes[0][0], kernel_sizes[0][1],
                        border_mode='same', activation='relu', name='c1')(b1)
 
@@ -109,6 +115,11 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
         kernel_sizes.append(tuple(ks))
 
     # Build frame-level model (pooling independent)
+    if 'freq_conv' in metadata.keys():
+        freq_conv = metadata['freq_conv']
+    else:
+        freq_conv = False
+
     model = build_frame_model(
         tf_rows=metadata['tf_rows'],
         tf_cols=metadata['tf_cols'],
@@ -120,6 +131,7 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
         metrics=metadata['metrics'],
         print_model_summary=print_model_summary,
         temp_conv=metadata['temp_conv'],
+        freq_conv=freq_conv,
         min_active_frames=metadata['min_active_frames'])
 
     # Load model weights

@@ -31,7 +31,7 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                 kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                 loss='binary_crossentropy', optimizer='adam',
                 metrics=['accuracy'], pool_layer='softmax',
-                print_model_summary=True, temp_conv=False,
+                print_model_summary=True, temp_conv=False, freq_conv=False,
                 min_active_frames=10):
 
     fullheight_kernel_size = (tf_rows, 1)
@@ -41,12 +41,18 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
         input_shape = (tf_rows, tf_cols, 1)
     print('Input shape: {:s}'.format(str(input_shape)))
 
+    assert len(nb_filters) == len(kernel_sizes)
+
     # MODEL ARCHITECTURE
     inputs = Input(shape=input_shape, name='input')
 
-    assert len(nb_filters) == len(kernel_sizes)
+    if freq_conv:
+        b0 = BatchNormalization(name='b0')(inputs)
+        c0 = Convolution2D(1, 3, 1, border_mode='same', activation='relu')(b0)
+        b1 = BatchNormalization(name='b1')(c0)
+    else:
+        b1 = BatchNormalization(name='b1')(inputs)
 
-    b1 = BatchNormalization(name='b1')(inputs)
     c1 = Convolution2D(nb_filters[0], kernel_sizes[0][0], kernel_sizes[0][1],
                        border_mode='same', activation='relu', name='c1')(b1)
 
@@ -157,7 +163,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    metrics=['accuracy', 'precision', 'recall'],
                    split_indices=[2, 3, 4, 5, 6],
                    pool_layers=['max', 'mean', 'softmax'],
-                   temp_conv=False, augs=['original']):
+                   temp_conv=False, freq_conv=False, augs=['original']):
 
     # Print out library versions
     print('keras version: {:s}'.format(keras.__version__))
@@ -213,6 +219,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             'optimizer': optimizer,
             'metrics': metrics,
             'temp_conv': temp_conv,
+            'freq_conv': freq_conv,
             'pool_layer': pool_layer,
             'theano_version': theano.__version__,
             'keras_version:': keras.__version__,
@@ -239,7 +246,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 nb_fullheight_filters=nb_fullheight_filters, loss=loss,
                 optimizer=optimizer, metrics=metrics, pool_layer=pool_layer,
                 print_model_summary=print_model_summary, temp_conv=temp_conv,
-                min_active_frames=min_active_frames)
+                freq_conv=freq_conv, min_active_frames=min_active_frames)
 
             # Load data
             # if pool_layer == 'none':
@@ -382,6 +389,7 @@ if __name__ == '__main__':
     parser.add_argument('--pool_layers', type=str, nargs='+',
                         default=['max', 'mean', 'softmax'])
     parser.add_argument('--temp_conv', type=int, default=0)
+    parser.add_argument('--freq_conv', type=int, default=0)
     parser.add_argument('--augs', type=str, nargs='+', default=['original'])
 
     args = parser.parse_args()
@@ -395,6 +403,7 @@ if __name__ == '__main__':
         ind += 2
 
     temp_conv = bool(args.temp_conv)
+    freq_conv = bool(args.freq_conv)
 
     run_experiment(args.expid,
                    n_bag_frames=args.n_bag_frames,
@@ -417,5 +426,6 @@ if __name__ == '__main__':
                    split_indices=args.split_indices,
                    pool_layers=args.pool_layers,
                    temp_conv=temp_conv,
+                   freq_conv=freq_conv,
                    augs=args.augs)
 
