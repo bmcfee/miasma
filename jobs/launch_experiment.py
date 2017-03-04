@@ -38,11 +38,11 @@ def launch_experiment(expid):
             assert d[3][:3] == 'exp'
             d[3] = expid
 
-            assert d[-12] == '--split_indices'
-            d[-11] = str(split_idx)
+            assert d[-14] == '--split_indices'
+            d[-13] = str(split_idx)
 
-            assert d[-10] == '--pool_layers'
-            d[-9] = pooling_layer
+            assert d[-12] == '--pool_layers'
+            d[-10] = pooling_layer
 
             data_fold[-1] = ' '.join(d)
 
