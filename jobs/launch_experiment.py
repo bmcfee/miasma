@@ -42,7 +42,7 @@ def launch_experiment(expid):
             d[-13] = str(split_idx)
 
             assert d[-12] == '--pool_layers'
-            d[-10] = pooling_layer
+            d[-11] = pooling_layer
 
             data_fold[-1] = ' '.join(d)
 
