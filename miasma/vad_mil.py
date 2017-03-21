@@ -166,7 +166,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                    loss='binary_crossentropy', optimizer='adam',
                    metrics=['accuracy', 'precision', 'recall'],
-                   split_indices=[2, 3, 4, 5, 6],
+                   split_indices=[0, 1, 2, 3, 4],
                    pool_layers=['max', 'mean', 'softmax'],
                    temp_conv=False, freq_conv=False, augs=['original']):
 
@@ -178,7 +178,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
 
     root_folder = '/scratch/js7561/datasets/MedleyDB_output'
     model_base_folder = os.path.join(root_folder, 'models')
-    splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
+    # splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
+    splitfile = '/home/js7561/dev/miasma/data/dataSplits_6_2_2.pkl'
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
@@ -390,7 +391,7 @@ if __name__ == '__main__':
     parser.add_argument('--metrics', type=str, nargs='+',
                         default=['accuracy', 'precision', 'recall'])
     parser.add_argument('--split_indices', type=int, nargs='+',
-                        default=[2, 3, 4, 5, 6])
+                        default=[0, 1, 2, 3, 4])
     parser.add_argument('--pool_layers', type=str, nargs='+',
                         default=['max', 'mean', 'softmax'])
     parser.add_argument('--temp_conv', type=int, default=0)
