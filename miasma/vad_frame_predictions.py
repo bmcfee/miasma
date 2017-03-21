@@ -68,11 +68,15 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     c1 = Convolution2D(nb_filters[0], kernel_sizes[0][0], kernel_sizes[0][1],
                        border_mode='same', activation='relu', name='c1')(b1)
 
-    b2 = BatchNormalization(name='b2')(c1)
-    c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0], kernel_sizes[1][1],
-                       border_mode='same', activation='relu', name='c2')(b2)
+    if len(nb_filters) >= 2:
+        b2 = BatchNormalization(name='b2')(c1)
+        c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0], kernel_sizes[1][1],
+                           border_mode='same', activation='relu', name='c2')(b2)
+        b3 = BatchNormalization(name='b3')(c2)
+    else:
+        b3 = BatchNormalization(name='b3')(c1)
 
-    b3 = BatchNormalization(name='b3')(c2)
+    # b3 = BatchNormalization(name='b3')(c2)
     c3 = Convolution2D(nb_fullheight_filters, fullheight_kernel_size[0],
                        fullheight_kernel_size[1], border_mode='valid',
                        activation='relu', name='c3')(b3)
