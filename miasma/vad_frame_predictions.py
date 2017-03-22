@@ -144,7 +144,8 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
     model.load_weights(checkpoint_file, by_name=True)
 
     # Load validation / test data
-    splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
+    # splitfile = '/home/js7561/dev/miasma/data/dataSplits_7_1_2.pkl'
+    splitfile = '/home/js7561/dev/miasma/data/dataSplits_6_2_2.pkl'
     # (train_generator, X_val, Y_val, ID_val,
     #  X_test, Y_test, ID_test) = (
     #     get_vad_data_frames(
