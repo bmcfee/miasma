@@ -33,7 +33,7 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                 loss='binary_crossentropy', optimizer='adam',
                 metrics=['accuracy'], pool_layer='softmax',
                 print_model_summary=True, temp_conv=False, freq_conv=False,
-                min_active_frames=10):
+                min_active_frames=10, dropout=False):
 
     fullheight_kernel_size = (tf_rows, 1)
     if K.image_dim_ordering() == 'th':
@@ -75,6 +75,9 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     s4 = SqueezeLayer(axis=1, name='s4')(b4)
     c4 = Convolution1D(1, 1, border_mode='valid', activation='sigmoid',
                        name='c4')(s4)
+
+    if dropout:
+        c4 = Dropout(0.5)(c4)
 
     if pool_layer == 'softmax':
         if temp_conv:
@@ -169,7 +172,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    metrics=['accuracy', 'precision', 'recall'],
                    split_indices=[0, 1, 2, 3, 4],
                    pool_layers=['max', 'mean', 'softmax'],
-                   temp_conv=False, freq_conv=False, augs=['original']):
+                   temp_conv=False, freq_conv=False, augs=['original'],
+                   dropout=False):
 
     # Print out library versions
     print('keras version: {:s}'.format(keras.__version__))
@@ -230,6 +234,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             'metrics': metrics,
             'temp_conv': temp_conv,
             'freq_conv': freq_conv,
+            'dropout': dropout,
             'pool_layer': pool_layer,
             'theano_version': theano.__version__,
             'keras_version:': keras.__version__,
@@ -256,7 +261,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 nb_fullheight_filters=nb_fullheight_filters, loss=loss,
                 optimizer=optimizer, metrics=metrics, pool_layer=pool_layer,
                 print_model_summary=print_model_summary, temp_conv=temp_conv,
-                freq_conv=freq_conv, min_active_frames=min_active_frames)
+                freq_conv=freq_conv, min_active_frames=min_active_frames,
+                dropout=dropout)
 
             # Load data
             # if pool_layer == 'none':
@@ -401,6 +407,8 @@ if __name__ == '__main__':
     parser.add_argument('--temp_conv', type=int, default=0)
     parser.add_argument('--freq_conv', type=int, default=0)
     parser.add_argument('--augs', type=str, nargs='+', default=['original'])
+    parser.add_argument('--dropout', action='store_const', const=True,
+                        default=False)
 
     args = parser.parse_args()
 
@@ -437,5 +445,6 @@ if __name__ == '__main__':
                    pool_layers=args.pool_layers,
                    temp_conv=temp_conv,
                    freq_conv=freq_conv,
-                   augs=args.augs)
+                   augs=args.augs,
+                   dropout=args.dropout)
 
