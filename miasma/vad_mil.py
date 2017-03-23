@@ -21,6 +21,7 @@ from sklearn.metrics import accuracy_score
 import gzip
 import sys
 import argparse
+import time
 
 
 np.random.seed(1337)  # for reproducibility
@@ -192,6 +193,9 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
         print('\n------------- MODEL: {:s}-pooling -------------'.format(
             pool_layer))
 
+        # Add random time delay (0-10 sec) to ensure parallel jobs don't
+        # crash here
+        time.sleep(np.random.rand() * 10)
         smp_folder = os.path.join(model_folder, pool_layer)
         if not os.path.isdir(smp_folder):
             os.mkdir(smp_folder)
