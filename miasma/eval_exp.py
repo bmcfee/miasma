@@ -141,7 +141,8 @@ def eval_exp(expid):
     model_base_folder = os.path.join(root_folder, 'models')
     model_folder = os.path.join(model_base_folder, expid)
 
-    split_indices = [2, 3, 4, 5, 6]
+    # split_indices = [2, 3, 4, 5, 6]
+    split_indices = [0, 1, 2, 3, 4]
 
     # Start with training report
     training_report(model_folder, split_indices)
