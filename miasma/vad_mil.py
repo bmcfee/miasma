@@ -77,7 +77,7 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                        name='c4')(s4)
 
     if dropout:
-        c4 = Dropout(0.5)(c4)
+        c4 = Dropout(0.5, name='c4dropout')(c4)
 
     if pool_layer == 'softmax':
         if temp_conv:

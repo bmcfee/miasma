@@ -2,7 +2,7 @@
 
 from keras import backend as K
 from keras.layers.normalization import BatchNormalization
-from keras.layers import Convolution2D, Convolution1D
+from keras.layers import Convolution2D, Convolution1D, Dropout
 from miasma.miasma.layers import SqueezeLayer
 # from miasma.miasma.frame_data_generators import get_vad_data_frames
 from miasma.miasma.data_generators import get_vad_data
@@ -23,7 +23,8 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                       kernel_sizes=[(3, 3), (3, 3)], nb_fullheight_filters=32,
                       loss='binary_crossentropy', optimizer='adam',
                       metrics=['accuracy'], print_model_summary=True,
-                      temp_conv=False, freq_conv=False, min_active_frames=10):
+                      temp_conv=False, freq_conv=False, min_active_frames=10,
+                      dropout=False):
     '''
     Build a model that produces frame-level predictions, with no final pool
     layer.
@@ -86,6 +87,9 @@ def build_frame_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     c4 = Convolution1D(1, 1, border_mode='valid', activation='sigmoid',
                        name='c4')(s4)
 
+    if dropout:
+        c4 = Dropout(0.5, name='c4dropout')(c4)
+
     if temp_conv:
         c5 = Convolution1D(1, min_active_frames, border_mode='same',
                            activation='sigmoid', name='c5')(c4)
@@ -136,7 +140,8 @@ def vad_frame_predictions(expid, pool_layer, split_idx,
         print_model_summary=print_model_summary,
         temp_conv=metadata['temp_conv'],
         freq_conv=freq_conv,
-        min_active_frames=metadata['min_active_frames'])
+        min_active_frames=metadata['min_active_frames'],
+        dropout=False)
 
     # Load model weights
     checkpoint_file = os.path.join(
