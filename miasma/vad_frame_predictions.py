@@ -228,7 +228,8 @@ def run_prediction(expid):
         print('\n------------- MODEL: {:s}-pooling -------------'.format(
             pool_layer))
 
-        for n, split_idx in enumerate([2, 3, 4, 5, 6]):
+        # for n, split_idx in enumerate([2, 3, 4, 5, 6]):
+        for n, split_idx in enumerate([0, 1, 2, 3, 4]):
             print('\n---------- Split {:d} ----------'.format(split_idx))
 
             if n == 0:
