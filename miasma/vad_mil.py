@@ -12,6 +12,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten, Input
 from keras.layers import Convolution2D, Convolution1D
 from keras.layers import MaxPooling1D, AveragePooling1D
 from keras.layers.normalization import BatchNormalization
+from keras.regularizers import l1, l2
 from keras.callbacks import ModelCheckpoint
 import pickle
 import theano
@@ -33,7 +34,8 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
                 loss='binary_crossentropy', optimizer='adam',
                 metrics=['accuracy'], pool_layer='softmax',
                 print_model_summary=True, temp_conv=False, freq_conv=False,
-                min_active_frames=10, dropout=False):
+                min_active_frames=10, dropout=False, reg_W=False,
+                reg_activity=False):
 
     fullheight_kernel_size = (tf_rows, 1)
     if K.image_dim_ordering() == 'th':
@@ -44,24 +46,40 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
 
     assert len(nb_filters) == len(kernel_sizes)
 
+    if reg_W:
+        reg_W_func = l2(0.01)
+    else:
+        reg_W_func = None
+
+    if reg_activity:
+        reg_activity_func = l1(0.01)
+    else:
+        reg_activity_func = None
+
     # MODEL ARCHITECTURE
     inputs = Input(shape=input_shape, name='input')
 
     if freq_conv:
         b0 = BatchNormalization(name='b0')(inputs)
         c0 = Convolution2D(1, 3, 1, border_mode='same', activation='relu',
-                           name='c0')(b0)
+                           name='c0', W_regularizer=reg_W_func,
+                           activity_regularizer=reg_activity_func)(b0)
         b1 = BatchNormalization(name='b1')(c0)
     else:
         b1 = BatchNormalization(name='b1')(inputs)
 
     c1 = Convolution2D(nb_filters[0], kernel_sizes[0][0], kernel_sizes[0][1],
-                       border_mode='same', activation='relu', name='c1')(b1)
+                       border_mode='same', activation='relu', name='c1',
+                       W_regularizer=reg_W_func,
+                       activity_regularizer=reg_activity_func)(b1)
 
     if len(nb_filters) >= 2:
         b2 = BatchNormalization(name='b2')(c1)
-        c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0], kernel_sizes[1][1],
-                           border_mode='same', activation='relu', name='c2')(b2)
+        c2 = Convolution2D(nb_filters[1], kernel_sizes[1][0],
+                           kernel_sizes[1][1],
+                           border_mode='same', activation='relu', name='c2',
+                           W_regularizer=reg_W_func,
+                           activity_regularizer=reg_activity_func)(b2)
         b3 = BatchNormalization(name='b3')(c2)
     else:
         b3 = BatchNormalization(name='b3')(c1)
@@ -69,12 +87,15 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     # b3 = BatchNormalization(name='b3')(c2)
     c3 = Convolution2D(nb_fullheight_filters, fullheight_kernel_size[0],
                        fullheight_kernel_size[1], border_mode='valid',
-                       activation='relu', name='c3')(b3)
+                       activation='relu', name='c3',
+                       W_regularizer=reg_W_func,
+                       activity_regularizer=reg_activity_func)(b3)
 
     b4 = BatchNormalization(name='b4')(c3)
     s4 = SqueezeLayer(axis=1, name='s4')(b4)
     c4 = Convolution1D(1, 1, border_mode='valid', activation='sigmoid',
-                       name='c4')(s4)
+                       name='c4', W_regularizer=reg_W_func,
+                       activity_regularizer=reg_activity_func)(s4)
 
     if dropout:
         c4 = Dropout(0.5, name='c4dropout')(c4)
@@ -82,7 +103,9 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     if pool_layer == 'softmax':
         if temp_conv:
             c5 = Convolution1D(1, min_active_frames, border_mode='same',
-                               activation='sigmoid', name='c5')(c4)
+                               activation='sigmoid', name='c5',
+                               W_regularizer=reg_W_func,
+                               activity_regularizer=reg_activity_func)(c4)
             s5 = SqueezeLayer(axis=-1, name='s5')(c5)
         else:
             s5 = SqueezeLayer(axis=-1, name='s5')(c4)
@@ -91,7 +114,9 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     elif pool_layer == 'max':
         if temp_conv:
             c5 = Convolution1D(1, min_active_frames, border_mode='same',
-                               activation='sigmoid', name='c5')(c4)
+                               activation='sigmoid', name='c5',
+                               W_regularizer=reg_W_func,
+                               activity_regularizer=reg_activity_func)(c4)
             p5 = MaxPooling1D(pool_length=tf_cols, stride=None,
                               border_mode='valid', name='max-pool')(c5)
         else:
@@ -102,7 +127,9 @@ def build_model(tf_rows=288, tf_cols=44, nb_filters=[32, 32],
     elif pool_layer == 'mean':
         if temp_conv:
             c5 = Convolution1D(1, min_active_frames, border_mode='same',
-                               activation='sigmoid', name='c5')(c4)
+                               activation='sigmoid', name='c5',
+                               W_regularizer=reg_W_func,
+                               activity_regularizer=reg_activity_func)(c4)
             p5 = AveragePooling1D(pool_length=tf_cols, stride=None,
                                   border_mode='valid', name='mean-pool')(c5)
         else:
@@ -173,7 +200,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                    split_indices=[0, 1, 2, 3, 4],
                    pool_layers=['max', 'mean', 'softmax'],
                    temp_conv=False, freq_conv=False, augs=['original'],
-                   dropout=False):
+                   dropout=False, reg_W=False, reg_activity=False):
 
     # Print out library versions
     print('keras version: {:s}'.format(keras.__version__))
@@ -235,6 +262,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
             'temp_conv': temp_conv,
             'freq_conv': freq_conv,
             'dropout': dropout,
+            'reg_W': reg_W,
+            'reg_activity': reg_activity,
             'pool_layer': pool_layer,
             'theano_version': theano.__version__,
             'keras_version:': keras.__version__,
@@ -262,7 +291,7 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
                 optimizer=optimizer, metrics=metrics, pool_layer=pool_layer,
                 print_model_summary=print_model_summary, temp_conv=temp_conv,
                 freq_conv=freq_conv, min_active_frames=min_active_frames,
-                dropout=dropout)
+                dropout=dropout, reg_W=reg_W, reg_activity=reg_activity)
 
             # Load data
             # if pool_layer == 'none':
@@ -409,6 +438,10 @@ if __name__ == '__main__':
     parser.add_argument('--augs', type=str, nargs='+', default=['original'])
     parser.add_argument('--dropout', action='store_const', const=True,
                         default=False)
+    parser.add_argument('--reg_W', action='store_const', const=True,
+                        default=False)
+    parser.add_argument('--reg_activity', action='store_const', const=True,
+                        default=False)
 
     args = parser.parse_args()
 
@@ -446,5 +479,7 @@ if __name__ == '__main__':
                    temp_conv=temp_conv,
                    freq_conv=freq_conv,
                    augs=args.augs,
-                   dropout=args.dropout)
+                   dropout=args.dropout,
+                   reg_W=args.reg_W,
+                   reg_activity=args.reg_activity)
 
