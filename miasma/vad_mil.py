@@ -215,6 +215,8 @@ def run_experiment(expid, n_bag_frames=44, min_active_frames=10,
 
     # Create a folder for this experiment
     model_folder = os.path.join(model_base_folder, expid)
+    # Add random time delay to prevent concurrency crashes
+    time.sleep(np.random.rand() * 10)
     if not os.path.isdir(model_folder):
         os.mkdir(model_folder)
 
